@@ -13,7 +13,6 @@
   import TrashCan24 from 'carbon-icons-svelte/lib/TrashCan24/TrashCan24.svelte';
   import JSZip from 'jszip';
   import { saveAs } from 'file-saver';
-  import { fade } from 'svelte/transition';
   import RangeSlider from 'svelte-range-slider-pips';
   import {
     comparatorNumericAscending,
@@ -22,7 +21,7 @@
     millisecondsToSeconds,
     secondsToMilliseconds
   } from '../../utils';
-  import type { RangeSliderChangeEvent, RangeSliderStopEvent, VideoDocument } from './constants';
+  import type { RangeSliderChangeEvent, RangeSliderStopEvent, StillFrames, VideoDocument } from './constants';
   import { getVideoURL } from './utils';
 
   export let videoDocument: VideoDocument;
@@ -33,7 +32,8 @@
   let duration: number = 0;
   let paused: boolean = true;
   let timesMS: number[] = [];
-  let stillFrames: Uint8Array[] = [];
+  let stillFrames: StillFrames = {};
+  // let stillFramesURLs: string[];
 
   $: currentTimeMS = secondsToMilliseconds(currentTime);
   $: durationMS = secondsToMilliseconds(duration);
@@ -42,9 +42,47 @@
   $: previousKeyTimesMS = keyTimesMS.filter(timeMS => timeMS < currentTimeMS);
   $: nextKeyTimesMS = keyTimesMS.filter(timeMS => timeMS > currentTimeMS);
   $: articleLines = [`#easeframe${videoDocument.id}`, ...timesMS.map(timeMS => `#markTIME${timeMS}`), `#endeaseframe`];
-  $: stillFramesURLs = stillFrames.map(stillFrame =>
-    URL.createObjectURL(new Blob([stillFrame.buffer], { type: 'image/png' }))
-  );
+  $: (async () => {
+    if (!videoEl) {
+      return;
+    }
+
+    // This strategy won't work once we 'load' projects, but suffices
+    // for snapping the current 'missing' frames as we add them.
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const { videoWidth, videoHeight } = videoEl;
+
+    canvas.width = videoWidth;
+    canvas.height = videoHeight;
+
+    const nextStillFrames: StillFrames = {
+      ...stillFrames
+    };
+
+    for (let timeMS of timesMS) {
+      if (!nextStillFrames[timeMS] && ctx !== null) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(videoEl, 0, 0, videoWidth, videoHeight, 0, 0, canvas.width, canvas.height);
+
+        const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(blob => resolve(blob), 'image/png'));
+
+        if (blob !== null) {
+          nextStillFrames[timeMS] = blob;
+        }
+      }
+    }
+
+    Object.keys(nextStillFrames).forEach(timeMS => {
+      if (timesMS.indexOf(+timeMS) === -1) {
+        delete nextStillFrames[timeMS];
+      }
+    });
+
+    stillFrames = nextStillFrames;
+
+    // stillFramesURLs = timesMS.map(timeMS => URL.createObjectURL(stillFrames[timeMS]));
+  })();
 
   const togglePlayback = () => videoEl[paused ? 'play' : 'pause']();
   const addCurrentTimeMS = () => (timesMS = [...timesMS, currentTimeMS].sort(comparatorNumericAscending));
@@ -120,8 +158,8 @@
     const name = `ease-frame-${videoDocument.id}`;
 
     // Images
-    stillFrames.forEach((stillFrame, index) => {
-      zip.file(`${name}-image-${String(timesMS[index]).padStart(numDurationMSChars, '0')}.png`, stillFrame);
+    timesMS.forEach(timeMS => {
+      zip.file(`${name}-image-${String(timeMS).padStart(numDurationMSChars, '0')}.png`, stillFrames[timeMS]);
     });
 
     // Text
@@ -132,199 +170,147 @@
 
     saveAs(zipFile, `${name}.zip`);
   };
-
-  const { createFFmpeg, fetchFile } = window.FFmpeg;
-
-  const ffmpeg = createFFmpeg({
-    // log: true,
-    corePath: `https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js`
-  });
-
-  const ffmpegLoadPromise = ffmpeg.load();
-
-  let isGeneratingImages = false;
-  let ffmpegVideoURL: string | null = null;
-
-  $: shouldDisableMarkerCreation = isGeneratingImages || ffmpegVideoURL === null;
-
-  $: (async videoURL => {
-    await ffmpegLoadPromise;
-
-    ffmpeg.FS('writeFile', 'source.mp4', await fetchFile(videoURL));
-    ffmpegVideoURL = URL.createObjectURL(new Blob([ffmpeg.FS('readFile', 'source.mp4').buffer], { type: 'video/mp4' }));
-  })(videoURL);
-
-  $: (async (timesMS, _ffmpegVideoURL) => {
-    if (timesMS.length === 0) {
-      return;
-    }
-
-    isGeneratingImages = true;
-    stillFrames = [];
-
-    await ffmpegLoadPromise;
-
-    const select = timesMS
-      .map(timeMS => `lt(prev_pts*TB,${millisecondsToSeconds(timeMS)})*gte(pts*TB,${millisecondsToSeconds(timeMS)})`)
-      .join('+');
-
-    // https://superuser.com/questions/1300627/ffmpeg-extract-pictures-from-several-selected-time-points
-    await ffmpeg.run('-i', 'source.mp4', '-vf', `select='${select}'`, '-vsync', 'drop', 'frame-%d.png');
-
-    stillFrames = timesMS.map((_timeMS, index) => ffmpeg.FS('readFile', `frame-${index + 1}.png`));
-    isGeneratingImages = false;
-  })(timesMS, ffmpegVideoURL);
 </script>
 
 <section>
-  {#if ffmpegVideoURL}
-    <article>
-      <figure
-        on:mousedown={handleVideoPointerDown}
-        on:touchstart={handleVideoPointerDown}
-        on:mousemove={handleVideoPointerMove}
-        on:touchmove={handleVideoPointerMove}
-      >
-        <AspectRatio ratio="16x9">
-          <video
-            bind:this={videoEl}
-            bind:currentTime
-            bind:duration
-            bind:paused
-            src={ffmpegVideoURL}
-            playsinline
-            muted
+  <article>
+    <figure
+      on:mousedown={handleVideoPointerDown}
+      on:touchstart={handleVideoPointerDown}
+      on:mousemove={handleVideoPointerMove}
+      on:touchmove={handleVideoPointerMove}
+    >
+      <AspectRatio ratio="16x9">
+        <video
+          bind:this={videoEl}
+          bind:currentTime
+          bind:duration
+          bind:paused
+          src={videoURL}
+          playsinline
+          muted
+          crossorigin="anonymous"
+        />
+      </AspectRatio>
+      <progress value={currentTime / duration || 0} />
+    </figure>
+    {#if durationMS > 0}
+      <div class="mounts-input">
+        <RangeSlider
+          min={0}
+          max={durationMS}
+          step={1}
+          handleFormatter={formatMillisecondsAsSecondsAndMilliseconds}
+          springValues={{ stiffness: 1, damping: 1 }}
+          values={timesMS}
+          on:change={updateVideoCurrentTimeToHandleValue}
+          on:stop={updateTimesMSToHandlesValues}
+        />
+      </div>
+      <nav>
+        <div data-group="left">
+          <Button
+            icon={paused ? PlayFilledAlt24 : PauseFilled24}
+            iconDescription={`${paused ? 'Play' : 'Pause'} video`}
+            kind="secondary"
+            size="field"
+            tooltipAlignment="start"
+            tooltipPosition="top"
+            on:click={togglePlayback}
           />
-        </AspectRatio>
-        <progress value={currentTime / duration || 0} />
-      </figure>
-      {#if durationMS > 0}
-        <div class="mounts-input">
-          {#key timesMS.length}
-            <RangeSlider
-              disabled={shouldDisableMarkerCreation}
-              min={0}
-              max={durationMS}
-              step={10}
-              handleFormatter={formatMillisecondsAsSecondsAndMilliseconds}
-              springValues={{ stiffness: 1, damping: 1 }}
-              values={timesMS}
-              on:change={updateVideoCurrentTimeToHandleValue}
-              on:stop={updateTimesMSToHandlesValues}
-            />
-          {/key}
+          <Button
+            disabled={previousKeyTimesMS.length === 0}
+            icon={PreviousFilled24}
+            iconDescription={`Jump to ${previousKeyTimesMS.length === 1 ? 'beginning' : 'previous mark'}`}
+            kind="secondary"
+            size="field"
+            tooltipAlignment="start"
+            tooltipPosition="top"
+            on:click={jumpToPreviousKeyTimeMS}
+          />
+          <Button
+            disabled={currentTimeMS - 10 < 0}
+            icon={PreviousOutline24}
+            iconDescription="Step back ten milliseconds"
+            kind="secondary"
+            size="field"
+            tooltipAlignment="start"
+            tooltipPosition="top"
+            on:click={() => stepCurrentTime(-10)}
+          />
         </div>
-        <nav>
-          <div data-group="left">
+        <div data-group="right">
+          <Button
+            disabled={currentTimeMS + 10 > durationMS}
+            icon={NextOutline24}
+            iconDescription="Step forward ten milliseconds"
+            kind="secondary"
+            size="field"
+            tooltipAlignment="end"
+            tooltipPosition="top"
+            on:click={() => stepCurrentTime(10)}
+          />
+          <Button
+            disabled={nextKeyTimesMS.length === 0}
+            icon={NextFilled24}
+            iconDescription={`Jump to ${nextKeyTimesMS.length === 1 ? 'end' : 'next mark'}`}
+            kind="secondary"
+            size="field"
+            tooltipAlignment="end"
+            tooltipPosition="top"
+            on:click={jumpToNextKeyTimeMS}
+          />
+          {#if isCurrentTimeMSMarked}
             <Button
-              icon={paused ? PlayFilledAlt24 : PauseFilled24}
-              iconDescription={`${paused ? 'Play' : 'Pause'} video`}
-              kind="secondary"
-              size="field"
-              tooltipAlignment="start"
-              tooltipPosition="top"
-              on:click={togglePlayback}
-            />
-            <Button
-              disabled={previousKeyTimesMS.length === 0}
-              icon={PreviousFilled24}
-              iconDescription={`Jump to ${previousKeyTimesMS.length === 1 ? 'beginning' : 'previous mark'}`}
-              kind="secondary"
-              size="field"
-              tooltipAlignment="start"
-              tooltipPosition="top"
-              on:click={jumpToPreviousKeyTimeMS}
-            />
-            <Button
-              disabled={currentTimeMS - 10 < 0}
-              icon={PreviousOutline24}
-              iconDescription="Step back ten milliseconds"
-              kind="secondary"
-              size="field"
-              tooltipAlignment="start"
-              tooltipPosition="top"
-              on:click={() => stepCurrentTime(-10)}
-            />
-          </div>
-          <div data-group="right">
-            <Button
-              disabled={currentTimeMS + 10 > durationMS}
-              icon={NextOutline24}
-              iconDescription="Step forward ten milliseconds"
-              kind="secondary"
+              icon={TrashCan24}
+              iconDescription="Remove mark from current time"
+              kind="danger"
               size="field"
               tooltipAlignment="end"
               tooltipPosition="top"
-              on:click={() => stepCurrentTime(10)}
+              on:click={removeCurrentTimeMS}
             />
+          {:else}
             <Button
-              disabled={nextKeyTimesMS.length === 0}
-              icon={NextFilled24}
-              iconDescription={`Jump to ${nextKeyTimesMS.length === 1 ? 'end' : 'next mark'}`}
-              kind="secondary"
+              icon={BookmarkAdd24}
+              iconDescription="Add mark at current time"
               size="field"
               tooltipAlignment="end"
               tooltipPosition="top"
-              on:click={jumpToNextKeyTimeMS}
+              on:click={addCurrentTimeMS}
             />
-            {#if isCurrentTimeMSMarked}
-              <Button
-                disabled={shouldDisableMarkerCreation}
-                icon={TrashCan24}
-                iconDescription="Remove mark from current time"
-                kind="danger"
-                size="field"
-                tooltipAlignment="end"
-                tooltipPosition="top"
-                on:click={removeCurrentTimeMS}
-              />
-            {:else}
-              <Button
-                disabled={shouldDisableMarkerCreation}
-                icon={BookmarkAdd24}
-                iconDescription="Add mark at current time"
-                size="field"
-                tooltipAlignment="end"
-                tooltipPosition="top"
-                on:click={addCurrentTimeMS}
-              />
-            {/if}
-          </div>
-          <div data-group="center">
-            <pre>{`${formatMillisecondsAsSecondsAndMilliseconds(currentTimeMS)} / ${formatMillisecondsAsSecondsAndMilliseconds(durationMS)}`}</pre>
-          </div>
-        </nav>
-      {/if}
-    </article>
-    <aside>
-      <div>
-        <code>{articleLines[0]}</code>
-      </div>
-      {#each timesMS as timeMS, index}
-        <div>
-          <code>{articleLines[index + 1]}</code>
-          <figure on:click={() => (currentTime = millisecondsToSeconds(timeMS))}>
-            <AspectRatio ratio="16x9">
-              {#if !isGeneratingImages}
-                <img in:fade out:fade src={stillFramesURLs[index]} alt={`A still image of the video at ${timeMS}ms`} />
-              {/if}
-            </AspectRatio>
-          </figure>
+          {/if}
         </div>
-      {/each}
+        <div data-group="center">
+          <pre>{`${formatMillisecondsAsSecondsAndMilliseconds(currentTimeMS)} / ${formatMillisecondsAsSecondsAndMilliseconds(durationMS)}`}</pre>
+        </div>
+      </nav>
+    {/if}
+  </article>
+  <aside>
+    <div>
+      <code>{articleLines[0]}</code>
+    </div>
+    {#each Object.keys(stillFrames) as timeMS, index}
       <div>
-        <code>{articleLines[articleLines.length - 1]}</code>
+        <code>{articleLines[index + 1]}</code>
+        <figure on:click={() => (currentTime = millisecondsToSeconds(+timeMS))}>
+          <AspectRatio ratio="16x9">
+            <img src={URL.createObjectURL(stillFrames[timeMS])} alt={`A still image of the video at ${timeMS}ms`} />
+          </AspectRatio>
+        </figure>
       </div>
-      {#if stillFrames.length > 0}
-        <footer>
-          <Button icon={Hashtag24} kind="secondary" size="field" on:click={copyMarkers}>Copy Markers</Button>
-          <Button icon={ImageCopy24} size="field" on:click={exportAssets}>Export Assets</Button>
-        </footer>
-      {/if}
-    </aside>
-  {:else}
-    <div>Loading video...</div>
-  {/if}
+    {/each}
+    <div>
+      <code>{articleLines[articleLines.length - 1]}</code>
+    </div>
+    {#if timesMS.length > 0}
+      <footer>
+        <Button icon={Hashtag24} kind="secondary" size="field" on:click={copyMarkers}>Copy Markers</Button>
+        <Button icon={ImageCopy24} size="field" on:click={exportAssets}>Export Assets</Button>
+      </footer>
+    {/if}
+  </aside>
 </section>
 
 <style>
@@ -489,9 +475,5 @@
   aside footer > :global(*) {
     width: 100%;
     max-width: none;
-  }
-
-  section > div {
-    margin: 20vh auto 0;
   }
 </style>
