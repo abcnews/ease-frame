@@ -349,12 +349,13 @@
 
   article figure {
     position: relative;
-    margin-bottom: 1rem;
+    margin: 0 0 1rem;
     touch-action: none;
   }
 
   video {
     width: 100%;
+    vertical-align: bottom;
     cursor: ew-resize;
   }
 
@@ -373,10 +374,12 @@
 
   progress::-webkit-progress-bar {
     background-color: rgba(0, 0, 0, 0.2);
+    vertical-align: bottom;
   }
 
   progress::-webkit-progress-value {
     background-color: rgba(255, 255, 255, 0.6);
+    vertical-align: bottom;
   }
 
   .mounts-input {
@@ -424,6 +427,7 @@
   }
 
   nav > div pre {
+    margin: 0;
     text-align: center;
     font-family: monospace;
     font-size: 1.5rem;
@@ -459,6 +463,7 @@
   }
 
   aside figure {
+    margin: 0;
     width: 5.333rem;
     background-color: #c6c6c6;
     cursor: pointer;
@@ -466,6 +471,7 @@
 
   aside img {
     max-width: 100%;
+    vertical-align: bottom;
   }
 
   aside footer {

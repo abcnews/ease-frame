@@ -1,4 +1,4 @@
-import 'carbon-components-svelte/css/white.css';
+import './global.scss';
 import App from './components/App/App.svelte';
 
 new App({

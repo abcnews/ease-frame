@@ -1,0 +1,21 @@
+$css--font-face: false;
+$css--helpers: true;
+$css--body: true;
+$css--use-layer: true;
+$css--reset: false;
+$css--default-type: true;
+$css--plex: false;
+
+html {
+  font-family: ABCSans, sans-serif;
+}
+
+// @import 'carbon-components/scss/globals/scss/_css--reset.scss';
+// @import 'carbon-components/scss/globals/scss/_css--font-face.scss';
+@import 'carbon-components/scss/globals/scss/_css--helpers.scss';
+@import 'carbon-components/scss/globals/scss/_css--body.scss';
+
+@import 'carbon-components/scss/globals/grid/_grid.scss';
+
+@import 'carbon-components/scss/components/button/button';
+@import 'carbon-components/scss/components/text-input/text-input';
