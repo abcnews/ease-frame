@@ -10,8 +10,6 @@ html {
   font-family: ABCSans, sans-serif;
 }
 
-// @import 'carbon-components/scss/globals/scss/_css--reset.scss';
-// @import 'carbon-components/scss/globals/scss/_css--font-face.scss';
 @import 'carbon-components/scss/globals/scss/_css--helpers.scss';
 @import 'carbon-components/scss/globals/scss/_css--body.scss';
 
@@ -19,3 +17,9 @@ html {
 
 @import 'carbon-components/scss/components/button/button';
 @import 'carbon-components/scss/components/text-input/text-input';
+
+@media (max-width: 40rem) {
+  input[type=''] {
+    font-size: 1rem !important;
+  }
+}
