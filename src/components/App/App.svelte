@@ -2,6 +2,7 @@
   import { fetchOne } from '@abcnews/terminus-fetch';
   import url2cmid from '@abcnews/url2cmid';
   import Button from 'carbon-components-svelte/src/Button/Button.svelte';
+  import Form from 'carbon-components-svelte/src/Form/Form.svelte';
   import TextInput from 'carbon-components-svelte/src/TextInput/TextInput.svelte';
   import DocumentVideo24 from 'carbon-icons-svelte/lib/DocumentVideo24/DocumentVideo24.svelte';
   import Editor from '../Editor/Editor.svelte';
@@ -58,16 +59,18 @@
     <Editor {videoDocument} />
   {:else}
     <section>
-      <TextInput
-        labelText="Video document URL / ID"
-        disabled={isFetching}
-        invalid={errorMessage !== null}
-        invalidText={errorMessage || undefined}
-        bind:value={textInputValue}
-        on:change={clearError}
-        on:focus={clearError}
-      />
-      <Button disabled={isFetching} icon={DocumentVideo24} size="field" on:click={loadVideoDocument}>Load video</Button>
+      <Form on:submit={loadVideoDocument}>
+        <TextInput
+          labelText="Video document URL / ID"
+          disabled={isFetching}
+          invalid={errorMessage !== null}
+          invalidText={errorMessage || undefined}
+          bind:value={textInputValue}
+          on:keydown={clearError}
+          on:focus={clearError}
+        />
+        <Button type="submit" disabled={isFetching} icon={DocumentVideo24} size="field">Load video</Button>
+      </Form>
     </section>
   {/if}
 </main>
@@ -92,7 +95,7 @@
     text-align: center;
   }
 
-  section {
+  section :global(form) {
     margin: 20vh auto 0;
     padding: 0 1rem;
     width: 100%;
@@ -103,22 +106,22 @@
     align-items: flex-start;
   }
 
-  section > :global(*) {
+  section :global(form) > :global(*) {
     width: 100%;
     max-width: none;
   }
 
-  section > :global(:last-child) {
+  section :global(form) > :global(:last-child) {
     margin-top: 1.5rem;
   }
 
   @media (min-width: 60rem) {
-    section > :global(:first-child) {
+    section :global(form) > :global(:first-child) {
       margin-right: 1rem;
       width: calc(80% - 1rem);
     }
 
-    section > :global(:last-child) {
+    section :global(form) > :global(:last-child) {
       width: 20%;
     }
   }
