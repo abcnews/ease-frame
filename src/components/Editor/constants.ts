@@ -12,6 +12,13 @@ export type VideoDocument = {
         files: VideoDocumentFile[];
       };
     };
+    image: {
+      poster: {
+        images: {
+          [key: string]: string;
+        };
+      };
+    };
   };
 };
 

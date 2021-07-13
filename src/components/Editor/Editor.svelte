@@ -13,6 +13,7 @@
   import TrashCan24 from 'carbon-icons-svelte/lib/TrashCan24/TrashCan24.svelte';
   import JSZip from 'jszip';
   import { saveAs } from 'file-saver';
+  import { onMount } from 'svelte';
   import RangeSlider from 'svelte-range-slider-pips';
   import {
     comparatorNumericAscending,
@@ -22,18 +23,19 @@
     secondsToMilliseconds
   } from '../../utils';
   import type { RangeSliderChangeEvent, RangeSliderStopEvent, StillFrames, VideoDocument } from './constants';
-  import { getVideoURL } from './utils';
+  import { getVideoURL, getVideoPosterURL } from './utils';
 
   export let videoDocument: VideoDocument;
 
-  let videoURL = getVideoURL(videoDocument);
+  const videoURL = getVideoURL(videoDocument);
+  const videoPosterURL = getVideoPosterURL(videoDocument);
+
   let videoEl: HTMLVideoElement;
   let currentTime: number = 0;
   let duration: number = 0;
   let paused: boolean = true;
   let timesMS: number[] = [];
   let stillFrames: StillFrames = {};
-  // let stillFramesURLs: string[];
 
   $: currentTimeMS = secondsToMilliseconds(currentTime);
   $: durationMS = secondsToMilliseconds(duration);
@@ -80,8 +82,6 @@
     });
 
     stillFrames = nextStillFrames;
-
-    // stillFramesURLs = timesMS.map(timeMS => URL.createObjectURL(stillFrames[timeMS]));
   })();
 
   const togglePlayback = () => videoEl[paused ? 'play' : 'pause']();
@@ -170,6 +170,10 @@
 
     saveAs(zipFile, `${name}.zip`);
   };
+
+  onMount(() => {
+    videoEl.load();
+  });
 </script>
 
 <section>
@@ -186,10 +190,12 @@
           bind:currentTime
           bind:duration
           bind:paused
-          src={videoURL}
-          playsinline
-          muted
           crossorigin="anonymous"
+          muted
+          playsinline
+          poster={videoPosterURL}
+          preload="auto"
+          src={videoURL}
         />
       </AspectRatio>
       <progress value={currentTime / duration || 0} />
@@ -350,6 +356,7 @@
   article figure {
     position: relative;
     margin: 0 0 1rem;
+    background-color: #000;
     touch-action: none;
   }
 
@@ -439,7 +446,7 @@
     display: flex;
     flex-direction: column;
     background-color: #f4f4f4;
-    font-size: 0.75rem;
+    font-size: 0.875rem;
   }
 
   @media (min-width: 60rem) {
