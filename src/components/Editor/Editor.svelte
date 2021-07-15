@@ -23,12 +23,16 @@
     secondsToMilliseconds
   } from '../../utils';
   import type { RangeSliderChangeEvent, RangeSliderStopEvent, StillFrames, VideoDocument } from './constants';
-  import { getVideoURL, getVideoPosterURL } from './utils';
+  import { getVideoFile } from './utils';
 
   export let videoDocument: VideoDocument;
+  export let isPortraitPreferred: boolean = false;
 
-  const videoURL = getVideoURL(videoDocument);
-  const videoPosterURL = getVideoPosterURL(videoDocument);
+  const videoFile = getVideoFile(videoDocument, isPortraitPreferred);
+
+  if (!videoFile) {
+    throw new Error('Video document has no files');
+  }
 
   let videoEl: HTMLVideoElement;
   let currentTime: number = 0;
@@ -184,7 +188,7 @@
       on:mousemove={handleVideoPointerMove}
       on:touchmove={handleVideoPointerMove}
     >
-      <AspectRatio ratio="16x9">
+      <AspectRatio ratio="4x3">
         <video
           bind:this={videoEl}
           bind:currentTime
@@ -193,9 +197,8 @@
           crossorigin="anonymous"
           muted
           playsinline
-          poster={videoPosterURL}
           preload="auto"
-          src={videoURL}
+          src={videoFile.url}
         />
       </AspectRatio>
       <progress value={currentTime / duration || 0} />
@@ -301,7 +304,7 @@
       <div>
         <code>{articleLines[index + 1]}</code>
         <figure on:click={() => (currentTime = millisecondsToSeconds(+timeMS))}>
-          <AspectRatio ratio="16x9">
+          <AspectRatio ratio="4x3">
             <img src={URL.createObjectURL(stillFrames[timeMS])} alt={`A still image of the video at ${timeMS}ms`} />
           </AspectRatio>
         </figure>
@@ -328,9 +331,8 @@
     --range-pip: #fff;
     --range-pip-text: #000;
     --range-slider: var(--tint);
-  }
 
-  section {
+    width: 100%;
     display: flex;
     flex-direction: column;
   }
@@ -355,6 +357,7 @@
 
   article figure {
     position: relative;
+    overflow: hidden;
     margin: 0 0 1rem;
     background-color: #000;
     touch-action: none;
@@ -362,6 +365,8 @@
 
   video {
     width: 100%;
+    height: 100%;
+    object-fit: contain;
     vertical-align: bottom;
     cursor: ew-resize;
   }
@@ -458,11 +463,15 @@
   }
 
   aside > div {
-    line-height: 3rem;
+    box-sizing: content-box;
+    height: 4rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: background-color 0.25s;
+  }
+
+  aside > div ~ div {
+    border-top: 1px solid #c6c6c6;
   }
 
   aside code {
@@ -471,13 +480,15 @@
 
   aside figure {
     margin: 0;
-    width: 5.333rem;
-    background-color: #c6c6c6;
+    width: 5.334rem;
+    background-color: #000;
     cursor: pointer;
   }
 
   aside img {
-    max-width: 100%;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
     vertical-align: bottom;
   }
 

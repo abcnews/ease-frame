@@ -1,5 +1,7 @@
-interface VideoDocumentFile {
+export interface VideoFile {
   size: number;
+  width: number;
+  height: number;
   url: string;
 }
 
@@ -9,7 +11,7 @@ export type VideoDocument = {
   media: {
     video: {
       renditions: {
-        files: VideoDocumentFile[];
+        files: VideoFile[];
       };
     };
     image: {
