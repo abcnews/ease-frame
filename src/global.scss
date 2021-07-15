@@ -17,7 +17,9 @@ html {
 
 @import 'carbon-components/scss/components/button/button';
 @import 'carbon-components/scss/components/radio-button/radio-button';
+@import 'carbon-components/scss/components/popover/popover';
 @import 'carbon-components/scss/components/text-input/text-input';
+@import 'carbon-components/scss/components/toggle/toggle';
 
 @media (max-width: 40rem) {
   input[type=''] {
