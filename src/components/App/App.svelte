@@ -10,7 +10,7 @@
   import Editor from '../Editor/Editor.svelte';
   import type { VideoDocument } from '../Editor/constants';
 
-  let textInputValue: string = 'https://www.abc.net.au/news/2021-07-15/13446364';
+  let textInputValue: string = '';
   let preferredVideoOrientation: 'landscape' | 'portrait' = 'landscape';
   let videoDocument: VideoDocument | null = null;
   let isFetching: boolean = false;
