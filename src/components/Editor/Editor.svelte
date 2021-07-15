@@ -513,7 +513,7 @@
 
   aside {
     flex-shrink: 0;
-    width: 100%;
+    width: calc(100% - 2rem);
     min-height: 100%;
     display: flex;
     flex-direction: column;
