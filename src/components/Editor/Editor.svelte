@@ -49,7 +49,16 @@
   $: nextKeyTimesMS = keyTimesMS.filter(timeMS => timeMS > currentTimeMS);
   $: articleLines = [`#easeframe${videoDocument.id}`, ...timesMS.map(timeMS => `#markTIME${timeMS}`), `#endeaseframe`];
   $: (async () => {
-    if (!videoEl) {
+    // No need to go further if:
+    //   a) we don't have a video, or
+    //   b) our stillFrames keys match our timesMS values
+    if (
+      !videoEl ||
+      Object.keys(stillFrames)
+        .map(x => +x)
+        .sort(comparatorNumericAscending)
+        .join() === timesMS.join()
+    ) {
       return;
     }
 
@@ -66,16 +75,27 @@
       ...stillFrames
     };
 
-    for (let timeMS of timesMS) {
+    timesMSIterator: for (let timeMS of timesMS) {
       if (!nextStillFrames[timeMS] && ctx !== null) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(videoEl, 0, 0, videoWidth, videoHeight, 0, 0, canvas.width, canvas.height);
+        await new Promise<void>(resolve =>
+          setTimeout(
+            async () => {
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              ctx.drawImage(videoEl, 0, 0, videoWidth, videoHeight, 0, 0, canvas.width, canvas.height);
 
-        const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(blob => resolve(blob), 'image/png'));
+              const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(blob => resolve(blob), 'image/png'));
 
-        if (blob !== null) {
-          nextStillFrames[timeMS] = blob;
-        }
+              if (blob !== null) {
+                nextStillFrames[timeMS] = blob;
+              }
+
+              resolve();
+            },
+            paused ? 100 : 0 // When dragging a handle to a potentially un-buffered frame, wait a bit
+          )
+        );
+
+        break timesMSIterator;
       }
     }
 
@@ -122,6 +142,8 @@
   let isAcceptingPointerMovement = false;
 
   function handleVideoPointerDown(event: MouseEvent | TouchEvent) {
+    pauseIfPlaying();
+
     const pointerLiftEventName = isTouchEvent(event) ? 'touchend' : 'mouseup';
     const pointerAbortEventName = isTouchEvent(event) ? 'touchcancel' : 'mouseleave';
 
@@ -139,6 +161,7 @@
     isAcceptingPointerMovement = true;
     document.addEventListener(pointerLiftEventName, stop);
     document.addEventListener(pointerAbortEventName, stop);
+    handleVideoPointerMove(event);
   }
 
   function handleVideoPointerMove(event: MouseEvent | TouchEvent) {
@@ -212,6 +235,7 @@
           handleFormatter={formatMillisecondsAsSecondsAndMilliseconds}
           springValues={{ stiffness: 1, damping: 1 }}
           values={timesMS}
+          on:start={pauseIfPlaying}
           on:change={updateVideoCurrentTimeToHandleValue}
           on:stop={updateTimesMSToHandlesValues}
         />
