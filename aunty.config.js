@@ -22,7 +22,9 @@ module.exports = {
       const redirectId = `latest${nonReleaseIdVariant ? `-${nonReleaseIdVariant}` : ''}`;
       const relativeAssetURL = `../${config.id}/`;
       const publicIndexHTML = fs.readFileSync(path.join(PUBLIC_PATH, 'index.html'), { encoding: 'utf8' });
-      const redirectIndexHTML = publicIndexHTML.replace(/(index\.)/g, `${relativeAssetURL}$1`);
+      const redirectIndexHTML = publicIndexHTML
+        .replace(/(\<\/title)/, ` v${config.id}$1`)
+        .replace(/(index\.)/g, `${relativeAssetURL}$1`);
 
       if (!fs.existsSync(REDIRECT_PATH)) {
         fs.mkdirSync(REDIRECT_PATH);
