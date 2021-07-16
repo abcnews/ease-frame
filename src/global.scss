@@ -6,10 +6,6 @@ $css--reset: false;
 $css--default-type: true;
 $css--plex: false;
 
-html {
-  font-family: ABCSans, sans-serif;
-}
-
 @import 'carbon-components/scss/globals/scss/_css--helpers.scss';
 @import 'carbon-components/scss/globals/scss/_css--body.scss';
 
@@ -20,6 +16,20 @@ html {
 @import 'carbon-components/scss/components/popover/popover';
 @import 'carbon-components/scss/components/text-input/text-input';
 @import 'carbon-components/scss/components/toggle/toggle';
+
+:root {
+  --primary: #0f62fe;
+  --tint: #f4f4f4;
+}
+
+html {
+  font-family: ABCSans, sans-serif;
+}
+
+main {
+  margin: auto;
+  max-width: 80rem;
+}
 
 @media (max-width: 40rem) {
   input[type=''] {

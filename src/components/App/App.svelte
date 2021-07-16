@@ -54,60 +54,36 @@
   const clearError = () => (errorMessage = null);
 </script>
 
-<main>
-  <header>
-    <h1>Ease Frame</h1>
-  </header>
-  {#if videoDocument}
-    <Editor {videoDocument} isPortraitPreferred={preferredVideoOrientation === 'portrait'} />
-  {:else}
-    <section>
-      <Form on:submit={loadVideoDocument}>
-        <TextInput
-          labelText="Video document URL / ID"
-          disabled={isFetching}
-          invalid={errorMessage !== null}
-          invalidText={errorMessage || undefined}
-          bind:value={textInputValue}
-          on:keydown={clearError}
-          on:focus={clearError}
-        />
-        <RadioButtonGroup legendText="Preferred video orientation" bind:selected={preferredVideoOrientation}>
-          <RadioButton labelText="Landscape" value="landscape" />
-          <RadioButton labelText="Portrait" value="portrait" />
-        </RadioButtonGroup>
-        <Button type="submit" disabled={isFetching} icon={DocumentVideo24} size="field">Load video</Button>
-      </Form>
-    </section>
-  {/if}
-</main>
+{#if videoDocument}
+  <Editor {videoDocument} isPortraitPreferred={preferredVideoOrientation === 'portrait'} />
+{:else}
+  <section>
+    <Form on:submit={loadVideoDocument}>
+      <TextInput
+        labelText="Video document URL / ID"
+        disabled={isFetching}
+        invalid={errorMessage !== null}
+        invalidText={errorMessage || undefined}
+        bind:value={textInputValue}
+        on:keydown={clearError}
+        on:focus={clearError}
+      />
+      <RadioButtonGroup legendText="Preferred video orientation" bind:selected={preferredVideoOrientation}>
+        <RadioButton labelText="Landscape" value="landscape" />
+        <RadioButton labelText="Portrait" value="portrait" />
+      </RadioButtonGroup>
+      <Button type="submit" disabled={isFetching} icon={DocumentVideo24} size="field">Load video</Button>
+    </Form>
+  </section>
+{/if}
 
 <style>
-  main {
-    --primary: #0f62fe;
-    --tint: #f4f4f4;
-  }
-
-  main {
-    margin: auto;
-    max-width: 80rem;
-  }
-
-  header {
-    margin: 1rem auto;
-  }
-
-  h1 {
-    font-size: 1.75rem;
-    text-align: center;
-  }
-
   section :global(form) {
     margin: 20vh auto 0;
     padding: 0 1rem;
     width: 100%;
     min-height: 6rem;
-    max-width: 60rem;
+    max-width: 32rem;
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
@@ -118,17 +94,25 @@
     max-width: none;
   }
 
-  @media (min-width: 60rem) {
+  @media (min-width: 32rem) {
     section :global(form) {
       display: flex;
     }
   }
 
-  section :global(form) > :global(button) {
-    margin-top: 1.5rem;
+  section :global(form) :global(fieldset) {
+    margin-top: 1rem;
   }
 
-  @media (min-width: 60rem) {
+  section :global(form) > :global(button) {
+    margin-top: 1rem;
+  }
+
+  @media (min-width: 32rem) {
+    section :global(form) {
+      display: flex;
+    }
+
     section :global(form) > :global(:nth-child(2)) {
       margin-right: 1rem;
       width: auto;
@@ -136,11 +120,8 @@
     }
 
     section :global(form) > :global(button) {
-      width: 12rem;
+      margin-top: 1.825rem;
+      width: 15.5rem;
     }
-  }
-
-  section :global(form) :global(fieldset) {
-    margin-top: 1rem;
   }
 </style>
