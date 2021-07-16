@@ -216,6 +216,12 @@
 
   onMount(() => {
     videoEl.load();
+
+    ['disablePictureInPicture', 'disableRemotePlayback'].forEach(experimentalProp => {
+      if (experimentalProp in videoEl) {
+        videoEl[experimentalProp] = true;
+      }
+    });
   });
 </script>
 
@@ -429,7 +435,7 @@
     touch-action: none;
   }
 
-  video {
+  article :global(video) {
     width: 100%;
     height: 100%;
     object-fit: contain;
