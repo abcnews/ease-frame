@@ -11,6 +11,8 @@ export const formatMillisecondsAsSecondsAndMilliseconds = (milliseconds: number)
   return `${padToThreeZeroes(wholeSeconds)}:${padToThreeZeroes(remainderMilliseconds)}`;
 };
 
-export const comparatorNumericAscending = (a: number, b: number) => a - b;
+const comparatorNumericAscending = (a: number, b: number) => a - b;
+
+export const sortedNumericAscending = (iterable: Iterable<number>) => [...iterable].sort(comparatorNumericAscending);
 
 export const isTouchEvent = (event: MouseEvent | TouchEvent): event is TouchEvent => 'touches' in event;

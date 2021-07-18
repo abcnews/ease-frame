@@ -21,14 +21,14 @@
   import { onMount } from 'svelte';
   import RangeSlider from 'svelte-range-slider-pips';
   import {
-    comparatorNumericAscending,
     formatMillisecondsAsSecondsAndMilliseconds,
     isTouchEvent,
     millisecondsToSeconds,
-    secondsToMilliseconds
+    secondsToMilliseconds,
+    sortedNumericAscending
   } from '../../utils';
   import type { RangeSliderChangeEvent, RangeSliderStopEvent, StillFrames, VideoDocument } from './constants';
-  import { getVideoFile } from './utils';
+  import { getNextStillFrames, getVideoFile, shouldStillFramesUpdate } from './utils';
 
   export let videoDocument: VideoDocument;
   export let isPortraitPreferred: boolean = false;
@@ -64,68 +64,11 @@
     ...timesMS.map(timeMS => `#markTIME${timeMS}`),
     `#endeaseframe`
   ];
-  $: (async () => {
-    // No need to go further if:
-    //   a) we don't have a video, or
-    //   b) our stillFrames keys match our timesMS values
-    if (
-      !videoEl ||
-      Object.keys(stillFrames)
-        .map(x => +x)
-        .sort(comparatorNumericAscending)
-        .join() === timesMS.join()
-    ) {
-      return;
-    }
-
-    // This strategy won't work once we 'load' projects, but suffices
-    // for snapping the current 'missing' frames as we add them.
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const { videoWidth, videoHeight } = videoEl;
-
-    canvas.width = videoWidth;
-    canvas.height = videoHeight;
-
-    const nextStillFrames: StillFrames = {
-      ...stillFrames
-    };
-
-    timesMSIterator: for (let timeMS of timesMS) {
-      if (!nextStillFrames[timeMS] && ctx !== null) {
-        await new Promise<void>(resolve =>
-          setTimeout(
-            async () => {
-              ctx.clearRect(0, 0, canvas.width, canvas.height);
-              ctx.drawImage(videoEl, 0, 0, videoWidth, videoHeight, 0, 0, canvas.width, canvas.height);
-
-              const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(blob => resolve(blob), 'image/png'));
-
-              if (blob !== null) {
-                nextStillFrames[timeMS] = blob;
-              }
-
-              resolve();
-            },
-            paused ? 100 : 0 // When dragging a handle to a potentially un-buffered frame, wait a bit
-          )
-        );
-
-        break timesMSIterator;
-      }
-    }
-
-    Object.keys(nextStillFrames).forEach(timeMS => {
-      if (timesMS.indexOf(+timeMS) === -1) {
-        delete nextStillFrames[timeMS];
-      }
-    });
-
-    stillFrames = nextStillFrames;
-  })();
+  $: shouldStillFramesUpdate(stillFrames, timesMS, videoEl) &&
+    getNextStillFrames(stillFrames, timesMS, videoEl).then(nextStillFrames => (stillFrames = nextStillFrames));
 
   const togglePlayback = () => videoEl[paused ? 'play' : 'pause']();
-  const addCurrentTimeMS = () => (timesMS = [...timesMS, currentTimeMS].sort(comparatorNumericAscending));
+  const addCurrentTimeMS = () => (timesMS = sortedNumericAscending([...timesMS, currentTimeMS]));
   const removeCurrentTimeMS = () => (timesMS = timesMS.filter(timeMS => timeMS !== currentTimeMS));
   const updateVideoCurrentTimeToHandleValue = (event: RangeSliderChangeEvent) => {
     const { value } = event.detail;
@@ -138,7 +81,7 @@
     const { startValue, value, values } = event.detail;
 
     if (startValue !== value) {
-      timesMS = [...new Set(values)].sort(comparatorNumericAscending);
+      timesMS = sortedNumericAscending(new Set(values));
     }
   };
   const pauseIfPlaying = () => !paused && videoEl.pause();
