@@ -3,19 +3,20 @@
   import { onMount } from 'svelte';
   import { isTouchEvent } from '../../utils';
 
-  export let src;
-  export let figureStyles;
-  export let currentTime;
-  export let duration;
-  export let paused;
+  export const pauseIfPlaying = () => !paused && videoEl.pause();
+  export const togglePlayback = () => videoEl[paused ? 'play' : 'pause']();
+
+  export let src: string;
+  export let figureStyles: string | undefined;
+  export let currentTime: number;
+  export let duration: number;
+  export let paused: boolean;
 
   let videoEl: HTMLVideoElement;
   let isAcceptingPointerMovement: boolean = false;
 
   function handleVideoPointerDown(event: MouseEvent | TouchEvent) {
-    if (!paused) {
-      videoEl.pause();
-    }
+    pauseIfPlaying();
 
     const pointerLiftEventName = isTouchEvent(event) ? 'touchend' : 'mouseup';
     const pointerAbortEventName = isTouchEvent(event) ? 'touchcancel' : 'mouseleave';

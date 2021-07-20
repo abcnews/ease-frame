@@ -38,7 +38,8 @@
     throw new Error('Video document has no files');
   }
 
-  let videoEl: HTMLVideoElement;
+  let pauseIfPlaying: () => false | void;
+  let togglePlayback: () => void | Promise<void>;
   let currentTime: number = 0;
   let duration: number = 0;
   let paused: boolean = true;
@@ -66,7 +67,6 @@
   $: shouldStillFramesUpdate(videoFile, timesMS, stillFrames) &&
     getNextStillFrames(videoFile, timesMS, stillFrames).then(nextStillFrames => (stillFrames = nextStillFrames));
 
-  const togglePlayback = () => videoEl[paused ? 'play' : 'pause']();
   const addCurrentTimeMS = () => (timesMS = sortedNumericAscending([...timesMS, currentTimeMS]));
   const removeCurrentTimeMS = () => (timesMS = timesMS.filter(timeMS => timeMS !== currentTimeMS));
   const updateVideoCurrentTimeToHandleValue = (event: RangeSliderChangeEvent) => {
@@ -83,7 +83,6 @@
       timesMS = sortedNumericAscending(new Set(values));
     }
   };
-  const pauseIfPlaying = () => !paused && videoEl.pause();
   const jumpToPreviousKeyTimeMS = () => {
     pauseIfPlaying();
     currentTime = millisecondsToSeconds(Math.max(...previousKeyTimesMS));
@@ -123,7 +122,15 @@
 
 <section>
   <article>
-    <Video bind:currentTime bind:duration bind:paused {figureStyles} src={videoFile.url} />
+    <Video
+      bind:currentTime
+      bind:duration
+      bind:paused
+      bind:togglePlayback
+      bind:pauseIfPlaying
+      {figureStyles}
+      src={videoFile.url}
+    />
     {#if durationMS > 0}
       <div class="mounts-input">
         <RangeSlider
