@@ -18,15 +18,14 @@
   import TrashCan24 from 'carbon-icons-svelte/lib/TrashCan24/TrashCan24.svelte';
   import JSZip from 'jszip';
   import { saveAs } from 'file-saver';
-  import { onMount } from 'svelte';
   import RangeSlider from 'svelte-range-slider-pips';
   import {
     formatMillisecondsAsSecondsAndMilliseconds,
-    isTouchEvent,
     millisecondsToSeconds,
     secondsToMilliseconds,
     sortedNumericAscending
   } from '../../utils';
+  import Video from '../Video/Video.svelte';
   import type { RangeSliderChangeEvent, RangeSliderStopEvent, StillFrames, VideoDocument } from './constants';
   import { getNextStillFrames, getVideoFile, shouldStillFramesUpdate } from './utils';
 
@@ -87,52 +86,16 @@
   const pauseIfPlaying = () => !paused && videoEl.pause();
   const jumpToPreviousKeyTimeMS = () => {
     pauseIfPlaying();
-    videoEl.currentTime = millisecondsToSeconds(Math.max(...previousKeyTimesMS));
+    currentTime = millisecondsToSeconds(Math.max(...previousKeyTimesMS));
   };
   const jumpToNextKeyTimeMS = () => {
     pauseIfPlaying();
-    videoEl.currentTime = millisecondsToSeconds(Math.min(...nextKeyTimesMS));
+    currentTime = millisecondsToSeconds(Math.min(...nextKeyTimesMS));
   };
   const stepCurrentTime = (diff: number) => {
     pauseIfPlaying();
-    videoEl.currentTime = millisecondsToSeconds(Math.round((currentTimeMS + diff) / 10) * 10);
+    currentTime = millisecondsToSeconds(Math.round((currentTimeMS + diff) / 10) * 10);
   };
-
-  let isAcceptingPointerMovement = false;
-
-  function handleVideoPointerDown(event: MouseEvent | TouchEvent) {
-    pauseIfPlaying();
-
-    const pointerLiftEventName = isTouchEvent(event) ? 'touchend' : 'mouseup';
-    const pointerAbortEventName = isTouchEvent(event) ? 'touchcancel' : 'mouseleave';
-
-    function stop(event: MouseEvent | TouchEvent) {
-      if (event) {
-        handleVideoPointerMove(event);
-      }
-
-      isAcceptingPointerMovement = false;
-
-      document.removeEventListener(pointerLiftEventName, stop);
-      document.addEventListener(pointerAbortEventName, stop);
-    }
-
-    isAcceptingPointerMovement = true;
-    document.addEventListener(pointerLiftEventName, stop);
-    document.addEventListener(pointerAbortEventName, stop);
-    handleVideoPointerMove(event);
-  }
-
-  function handleVideoPointerMove(event: MouseEvent | TouchEvent) {
-    if (!isAcceptingPointerMovement || event.type === 'touchend' || event.type === 'touchcancel') {
-      return;
-    }
-
-    const { left, right } = videoEl.getBoundingClientRect();
-    const { clientX } = isTouchEvent(event) ? event.touches[0] : event;
-
-    currentTime = (duration * (clientX - left)) / (right - left);
-  }
 
   const copyMarkers = () => {
     navigator.clipboard.writeText(articleLines.join('\n\n'));
@@ -156,42 +119,11 @@
 
     saveAs(zipFile, `${name}.zip`);
   };
-
-  onMount(() => {
-    videoEl.load();
-
-    ['disablePictureInPicture', 'disableRemotePlayback'].forEach(experimentalProp => {
-      if (experimentalProp in videoEl) {
-        videoEl[experimentalProp] = true;
-      }
-    });
-  });
 </script>
 
 <section>
   <article>
-    <figure
-      style={figureStyles}
-      on:mousedown={handleVideoPointerDown}
-      on:touchstart={handleVideoPointerDown}
-      on:mousemove={handleVideoPointerMove}
-      on:touchmove={handleVideoPointerMove}
-    >
-      <AspectRatio ratio="4x3">
-        <video
-          bind:this={videoEl}
-          bind:currentTime
-          bind:duration
-          bind:paused
-          crossorigin="anonymous"
-          muted
-          playsinline
-          preload="auto"
-          src={videoFile.url}
-        />
-      </AspectRatio>
-      <progress value={currentTime / duration || 0} />
-    </figure>
+    <Video bind:currentTime bind:duration bind:paused {figureStyles} src={videoFile.url} />
     {#if durationMS > 0}
       <div class="mounts-input">
         <RangeSlider
@@ -368,45 +300,6 @@
 
   article > * {
     width: 100%;
-  }
-
-  article figure {
-    position: relative;
-    overflow: hidden;
-    margin: 0 0 1rem;
-    background-image: var(--figure-gradient);
-    touch-action: none;
-  }
-
-  article :global(video) {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    vertical-align: bottom;
-    cursor: ew-resize;
-  }
-
-  progress {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    display: block;
-    width: 100%;
-    height: 0.5rem;
-    -webkit-appearance: none;
-    appearance: none;
-    pointer-events: none;
-    transition: opacity 0.25s;
-  }
-
-  progress::-webkit-progress-bar {
-    background-color: rgba(0, 0, 0, 0.2);
-    vertical-align: bottom;
-  }
-
-  progress::-webkit-progress-value {
-    background-color: rgba(255, 255, 255, 0.6);
-    vertical-align: bottom;
   }
 
   .mounts-input {
