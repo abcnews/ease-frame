@@ -1,4 +1,4 @@
-import { sortedNumericAscending } from '../../utils';
+import { millisecondsToSeconds, oneShotEvent, sortedNumericAscending } from '../../utils';
 import type { StillFrames, VideoDocument, VideoFile } from './constants';
 
 const isFileAsTallAsOrTallerThanWide = (file: VideoFile) => file.height >= file.width;
@@ -12,69 +12,58 @@ export const getVideoFile = (videoDocument: VideoDocument, isPortraitPreferred: 
   return (preferredFiles.length > 0 ? preferredFiles : files).sort(comparatorSizeDescending)[0];
 };
 
-export const shouldStillFramesUpdate = (
-  stillFrames: StillFrames,
-  timesMS: number[],
-  videoEl?: HTMLVideoElement
-): boolean => {
-  // We should update if:
-  //   a) we have a video, and
-  //   b) our stillFrames keys don't match our timesMS values
-  return videoEl !== null && sortedNumericAscending(Object.keys(stillFrames).map(x => +x)).join() !== timesMS.join();
+const stillFramesCanvasEl = document.createElement('canvas');
+const stillFramesCanvasContext = stillFramesCanvasEl.getContext('2d');
+const stillFramesVideoEl = Object.entries<string>({
+  crossorigin: 'anonymous',
+  muted: '',
+  playsinline: '',
+  preload: 'auto'
+}).reduce<HTMLVideoElement>((el, [attr, value]) => (el.setAttribute(attr, value), el), document.createElement('video'));
+
+export const shouldStillFramesUpdate = (videoFile: VideoFile, timesMS: number[], stillFrames: StillFrames): boolean => {
+  // We should update if our stillFrames keys don't match our timesMS values
+  return (
+    stillFramesVideoEl.src !== videoFile.url ||
+    sortedNumericAscending(Object.keys(stillFrames).map(x => +x)).join() !== timesMS.join()
+  );
 };
 
-const stillFramesCanvas = document.createElement('canvas');
-const stillFramesCanvasContext = stillFramesCanvas.getContext('2d');
-
 export const getNextStillFrames = async (
-  currentStillFrames: StillFrames,
+  videoFile: VideoFile,
   timesMS: number[],
-  videoEl: HTMLVideoElement
+  currentStillFrames: StillFrames
 ): Promise<StillFrames> => {
-  // This strategy won't work once we 'load' projects, but suffices
-  // for snapping the current 'missing' frames as we add them.
-  const { videoWidth, videoHeight } = videoEl;
+  if (stillFramesCanvasContext === null) {
+    throw new Error('No canvas context to work with');
+  }
 
-  stillFramesCanvas.width = videoWidth;
-  stillFramesCanvas.height = videoHeight;
-
+  const { width, height } = videoFile;
   const nextStillFrames: StillFrames = {
     ...currentStillFrames
   };
 
-  timesMSIterator: for (let timeMS of timesMS) {
-    if (!nextStillFrames[timeMS] && stillFramesCanvasContext !== null) {
-      await new Promise<void>(resolve =>
-        setTimeout(
-          async () => {
-            stillFramesCanvasContext.clearRect(0, 0, stillFramesCanvas.width, stillFramesCanvas.height);
-            stillFramesCanvasContext.drawImage(
-              videoEl,
-              0,
-              0,
-              videoWidth,
-              videoHeight,
-              0,
-              0,
-              stillFramesCanvas.width,
-              stillFramesCanvas.height
-            );
+  stillFramesCanvasEl.width = width;
+  stillFramesCanvasEl.height = height;
+  stillFramesVideoEl.src = videoFile.url;
+  await stillFramesVideoEl.play();
+  await oneShotEvent(stillFramesVideoEl, 'canplaythrough');
+  stillFramesVideoEl.pause();
 
-            const blob = await new Promise<Blob | null>(resolve =>
-              stillFramesCanvas.toBlob(blob => resolve(blob), 'image/png')
-            );
+  for (let timeMS of timesMS) {
+    if (!nextStillFrames[timeMS]) {
+      stillFramesVideoEl.currentTime = millisecondsToSeconds(timeMS);
+      await oneShotEvent(stillFramesVideoEl, 'seeked');
+      stillFramesCanvasContext.clearRect(0, 0, width, height);
+      stillFramesCanvasContext.drawImage(stillFramesVideoEl, 0, 0, width, height, 0, 0, width, height);
 
-            if (blob !== null) {
-              nextStillFrames[timeMS] = blob;
-            }
-
-            resolve();
-          },
-          videoEl.paused ? 100 : 0 // When dragging a handle to a potentially un-buffered frame, wait a bit
-        )
+      const blob = await new Promise<Blob | null>(resolve =>
+        stillFramesCanvasEl.toBlob(blob => resolve(blob), 'image/png')
       );
 
-      break timesMSIterator;
+      if (blob !== null) {
+        nextStillFrames[timeMS] = blob;
+      }
     }
   }
 

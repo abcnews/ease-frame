@@ -64,8 +64,8 @@
     ...timesMS.map(timeMS => `#markTIME${timeMS}`),
     `#endeaseframe`
   ];
-  $: shouldStillFramesUpdate(stillFrames, timesMS, videoEl) &&
-    getNextStillFrames(stillFrames, timesMS, videoEl).then(nextStillFrames => (stillFrames = nextStillFrames));
+  $: shouldStillFramesUpdate(videoFile, timesMS, stillFrames) &&
+    getNextStillFrames(videoFile, timesMS, stillFrames).then(nextStillFrames => (stillFrames = nextStillFrames));
 
   const togglePlayback = () => videoEl[paused ? 'play' : 'pause']();
   const addCurrentTimeMS = () => (timesMS = sortedNumericAscending([...timesMS, currentTimeMS]));

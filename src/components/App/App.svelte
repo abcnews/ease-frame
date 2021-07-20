@@ -10,7 +10,9 @@
   import Editor from '../Editor/Editor.svelte';
   import type { VideoDocument } from '../Editor/constants';
 
-  let textInputValue: string = '';
+  export let debugTextInputValue: string;
+
+  let textInputValue: string = debugTextInputValue || '';
   let preferredVideoOrientation: 'landscape' | 'portrait' = 'landscape';
   let videoDocument: VideoDocument | null = null;
   let isFetching: boolean = false;

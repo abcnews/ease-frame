@@ -16,3 +16,14 @@ const comparatorNumericAscending = (a: number, b: number) => a - b;
 export const sortedNumericAscending = (iterable: Iterable<number>) => [...iterable].sort(comparatorNumericAscending);
 
 export const isTouchEvent = (event: MouseEvent | TouchEvent): event is TouchEvent => 'touches' in event;
+
+export const oneShotEvent = <T extends EventTarget>(target: T, name: string) => {
+  return new Promise<void>(resolve => {
+    const handler = () => {
+      target.removeEventListener(name, handler);
+      resolve();
+    };
+
+    target.addEventListener(name, handler);
+  });
+};
