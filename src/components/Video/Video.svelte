@@ -68,57 +68,25 @@
 </script>
 
 <Figure>
-  <div
+  <video
+    bind:this={videoEl}
+    bind:currentTime
+    bind:duration
+    bind:paused
+    crossorigin="anonymous"
+    muted
+    playsinline
+    preload="auto"
+    {src}
     on:mousedown={handleVideoPointerDown}
     on:touchstart={handleVideoPointerDown}
     on:mousemove={handleVideoPointerMove}
     on:touchmove={handleVideoPointerMove}
-  >
-    <video
-      bind:this={videoEl}
-      bind:currentTime
-      bind:duration
-      bind:paused
-      crossorigin="anonymous"
-      muted
-      playsinline
-      preload="auto"
-      {src}
-    />
-    <progress value={currentTime / duration || 0} />
-  </div>
+  />
 </Figure>
 
-<style lang="scss">
-  div {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+<style>
+  video {
     cursor: ew-resize;
-  }
-
-  progress {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    display: block;
-    width: 100%;
-    height: 0.5rem;
-    -webkit-appearance: none;
-    appearance: none;
-    pointer-events: none;
-    transition: opacity 0.25s;
-  }
-
-  progress::-webkit-progress-bar {
-    background-color: rgba(0, 0, 0, 0.2);
-    vertical-align: bottom;
-  }
-
-  progress::-webkit-progress-value {
-    background-color: rgba(255, 255, 255, 0.6);
-    vertical-align: bottom;
   }
 </style>

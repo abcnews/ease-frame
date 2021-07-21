@@ -93,7 +93,7 @@
   <article>
     <Video bind:currentTime bind:duration bind:paused bind:seek bind:togglePlayback src={videoFile.url} />
     {#if durationMS > 0}
-      <div class="mounts-input">
+      <div class="timeline">
         <RangeSlider
           min={0}
           max={durationMS}
@@ -105,6 +105,7 @@
           on:change={seekToHandleValue}
           on:stop={updateTimesMSToHandlesValues}
         />
+        <progress value={currentTime / duration || 0} />
       </div>
       <nav>
         <div data-group="left">
@@ -250,13 +251,41 @@
     width: 100%;
   }
 
-  .mounts-input {
+  .timeline {
+    position: relative;
+    margin: 1.5rem 0;
     font-size: 1rem;
   }
 
-  .mounts-input :global(.rangeSlider) {
-    margin: 1.5rem 0;
+  .timeline :global(.rangeSlider) {
+    margin: 0;
     border-radius: 0;
+  }
+
+  progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    display: block;
+    border: 0;
+    width: 100%;
+    height: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+
+  progress::-webkit-progress-bar {
+    background-color: transparent;
+  }
+
+  progress::-moz-progress-bar {
+    background-color: var(--primary);
+  }
+
+  progress::-webkit-progress-value {
+    background-color: var(--primary);
   }
 
   nav {
