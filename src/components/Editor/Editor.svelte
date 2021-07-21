@@ -1,10 +1,6 @@
 <script lang="ts">
   import AspectRatio from 'carbon-components-svelte/src/AspectRatio/AspectRatio.svelte';
   import Button from 'carbon-components-svelte/src/Button/Button.svelte';
-  import Popover from 'carbon-components-svelte/src/Popover/Popover.svelte';
-  import RadioButton from 'carbon-components-svelte/src/RadioButton/RadioButton.svelte';
-  import RadioButtonGroup from 'carbon-components-svelte/src/RadioButtonGroup/RadioButtonGroup.svelte';
-  import Toggle from 'carbon-components-svelte/src/Toggle/Toggle.svelte';
   import BookmarkAdd24 from 'carbon-icons-svelte/lib/BookmarkAdd24/BookmarkAdd24.svelte';
   import Hashtag24 from 'carbon-icons-svelte/lib/Hashtag24/Hashtag24.svelte';
   import ImageCopy24 from 'carbon-icons-svelte/lib/ImageCopy24/ImageCopy24.svelte';
@@ -14,7 +10,6 @@
   import PlayFilledAlt24 from 'carbon-icons-svelte/lib/PlayFilledAlt24/PlayFilledAlt24.svelte';
   import PreviousFilled24 from 'carbon-icons-svelte/lib/PreviousFilled24/PreviousFilled24.svelte';
   import PreviousOutline24 from 'carbon-icons-svelte/lib/PreviousOutline24/PreviousOutline24.svelte';
-  import Settings24 from 'carbon-icons-svelte/lib/Settings24/Settings24.svelte';
   import TrashCan24 from 'carbon-icons-svelte/lib/TrashCan24/TrashCan24.svelte';
   import JSZip from 'jszip';
   import { saveAs } from 'file-saver';
@@ -25,6 +20,9 @@
     secondsToMilliseconds,
     sortedNumericAscending
   } from '../../utils';
+  import { DEFAULT_PREFERENCES } from '../PreferencesManager/constants';
+  import type { Preferences } from '../PreferencesManager/constants';
+  import PreferencesManager from '../PreferencesManager/PreferencesManager.svelte';
   import Video from '../Video/Video.svelte';
   import type { RangeSliderChangeEvent, RangeSliderStopEvent, StillFrames, VideoDocument } from './constants';
   import { getNextStillFrames, getVideoFile, shouldStillFramesUpdate } from './utils';
@@ -45,12 +43,9 @@
   let paused: boolean = true;
   let timesMS: number[] = [];
   let stillFrames: StillFrames = {};
-  let isEditingPreferences: boolean = false;
-  let insetPreference: string = 'none';
-  let isBackgroundPreferenceEnabled: boolean = false;
-  let backgroundPreference: string = '#666666';
+  let preferences: Preferences = DEFAULT_PREFERENCES;
 
-  $: figureStyles = isBackgroundPreferenceEnabled ? `background: ${backgroundPreference};` : undefined;
+  $: figureStyles = preferences.background ? `background: ${preferences.background};` : undefined;
   $: currentTimeMS = secondsToMilliseconds(currentTime);
   $: durationMS = secondsToMilliseconds(duration);
   $: isCurrentTimeMSMarked = timesMS.includes(currentTimeMS);
@@ -58,8 +53,8 @@
   $: previousKeyTimesMS = keyTimesMS.filter(timeMS => timeMS < currentTimeMS);
   $: nextKeyTimesMS = keyTimesMS.filter(timeMS => timeMS > currentTimeMS);
   $: articleLines = [
-    `#easeframe${videoDocument.id}${insetPreference === 'none' ? '' : `INSET${insetPreference}`}${
-      isBackgroundPreferenceEnabled ? `BACKGROUND${backgroundPreference.replace('#', '')}` : ''
+    `#easeframe${videoDocument.id}${preferences.inset ? `INSET${preferences.inset}` : ''}${
+      preferences.background ? `BACKGROUND${preferences.background.replace('#', '')}` : ''
     }`,
     ...timesMS.map(timeMS => `#markTIME${timeMS}`),
     `#endeaseframe`
@@ -153,7 +148,7 @@
             kind="secondary"
             size="field"
             tooltipAlignment="start"
-            tooltipPosition="top"
+            tooltipPosition="bottom"
             on:click={togglePlayback}
           />
           <Button
@@ -163,7 +158,7 @@
             kind="secondary"
             size="field"
             tooltipAlignment="start"
-            tooltipPosition="top"
+            tooltipPosition="bottom"
             on:click={jumpToPreviousKeyTimeMS}
           />
           <Button
@@ -173,7 +168,7 @@
             kind="secondary"
             size="field"
             tooltipAlignment="start"
-            tooltipPosition="top"
+            tooltipPosition="bottom"
             on:click={() => stepCurrentTime(-10)}
           />
         </div>
@@ -185,7 +180,7 @@
             kind="secondary"
             size="field"
             tooltipAlignment="end"
-            tooltipPosition="top"
+            tooltipPosition="bottom"
             on:click={() => stepCurrentTime(10)}
           />
           <Button
@@ -195,7 +190,7 @@
             kind="secondary"
             size="field"
             tooltipAlignment="end"
-            tooltipPosition="top"
+            tooltipPosition="bottom"
             on:click={jumpToNextKeyTimeMS}
           />
           {#if isCurrentTimeMSMarked}
@@ -205,7 +200,7 @@
               kind="danger"
               size="field"
               tooltipAlignment="end"
-              tooltipPosition="top"
+              tooltipPosition="bottom"
               on:click={removeCurrentTimeMS}
             />
           {:else}
@@ -214,7 +209,7 @@
               iconDescription="Add mark at current time"
               size="field"
               tooltipAlignment="end"
-              tooltipPosition="top"
+              tooltipPosition="bottom"
               on:click={addCurrentTimeMS}
             />
           {/if}
@@ -228,29 +223,8 @@
   <aside>
     <div>
       <pre>{articleLines[0].replace(/([A-Z]+)/g, '\n…$1')}</pre>
-      <div class="settings">
-        <Button
-          icon={Settings24}
-          iconDescription={`Change properties`}
-          kind="secondary"
-          size="field"
-          tooltipAlignment="end"
-          tooltipPosition="left"
-          on:click={() => (isEditingPreferences = !isEditingPreferences)}
-        />
-        <Popover bind:open={isEditingPreferences} align="bottom-right" closeOnOutsideClick light relative>
-          <div class="popover">
-            <RadioButtonGroup bind:selected={insetPreference} legendText="Video position" orientation="vertical">
-              <RadioButton labelText="Full cover" value="none" />
-              <RadioButton labelText="Inset left" value="left" />
-              <RadioButton labelText="Inset center" value="center" />
-              <RadioButton labelText="Inset right" value="right" />
-            </RadioButtonGroup>
-            <br />
-            <input type="color" bind:value={backgroundPreference} disabled={!isBackgroundPreferenceEnabled} />
-            <Toggle bind:toggled={isBackgroundPreferenceEnabled} labelText="Inset video background colour" size="sm" />
-          </div>
-        </Popover>
+      <div class="preferences">
+        <PreferencesManager on:change={({ detail }) => (preferences = detail)} />
       </div>
     </div>
     {#each Object.keys(stillFrames) as timeMS, index}
@@ -394,24 +368,9 @@
     margin-left: 0.75rem;
   }
 
-  aside .settings {
+  aside .preferences {
     position: relative;
     margin-right: 0.75rem;
-  }
-
-  .popover {
-    padding: 0.75rem 0.75rem 1rem;
-    width: 15rem;
-  }
-
-  .popover input[type='color'] {
-    transform: translate(0, 1.625rem);
-    position: absolute;
-    left: 6rem;
-  }
-
-  .popover input[type='color'][disabled] {
-    opacity: 0.5;
   }
 
   aside figure {
