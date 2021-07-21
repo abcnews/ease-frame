@@ -16,7 +16,6 @@
   import RangeSlider from 'svelte-range-slider-pips';
   import {
     formatMillisecondsAsSecondsAndMilliseconds,
-    millisecondsToSeconds,
     secondsToMilliseconds,
     sortedNumericAscending
   } from '../../utils';
@@ -24,7 +23,7 @@
   import type { Preferences } from '../PreferencesManager/constants';
   import PreferencesManager from '../PreferencesManager/PreferencesManager.svelte';
   import Video from '../Video/Video.svelte';
-  import type { RangeSliderChangeEvent, RangeSliderStopEvent, StillFrames, VideoDocument } from './constants';
+  import type { RangeSliderEvent, StillFrames, VideoDocument } from './constants';
   import { getNextStillFrames, getVideoFile, shouldStillFramesUpdate } from './utils';
 
   export let videoDocument: VideoDocument;
@@ -36,8 +35,8 @@
     throw new Error('Video document has no files');
   }
 
-  let pauseIfPlaying: () => false | void;
-  let togglePlayback: () => void | Promise<void>;
+  let seek: Video['seek'];
+  let togglePlayback: Video['togglePlayback'];
   let currentTime: number = 0;
   let duration: number = 0;
   let paused: boolean = true;
@@ -64,32 +63,12 @@
 
   const addCurrentTimeMS = () => (timesMS = sortedNumericAscending([...timesMS, currentTimeMS]));
   const removeCurrentTimeMS = () => (timesMS = timesMS.filter(timeMS => timeMS !== currentTimeMS));
-  const updateVideoCurrentTimeToHandleValue = (event: RangeSliderChangeEvent) => {
-    const { value } = event.detail;
-
-    if (currentTime !== value) {
-      currentTime = value / 1000;
-    }
-  };
-  const updateTimesMSToHandlesValues = (event: RangeSliderStopEvent) => {
-    const { startValue, value, values } = event.detail;
-
-    if (startValue !== value) {
-      timesMS = sortedNumericAscending(new Set(values));
-    }
-  };
-  const jumpToPreviousKeyTimeMS = () => {
-    pauseIfPlaying();
-    currentTime = millisecondsToSeconds(Math.max(...previousKeyTimesMS));
-  };
-  const jumpToNextKeyTimeMS = () => {
-    pauseIfPlaying();
-    currentTime = millisecondsToSeconds(Math.min(...nextKeyTimesMS));
-  };
-  const stepCurrentTime = (diff: number) => {
-    pauseIfPlaying();
-    currentTime = millisecondsToSeconds(Math.round((currentTimeMS + diff) / 10) * 10);
-  };
+  const seekToHandleValue = (event: RangeSliderEvent) => seek(event.detail.value);
+  const updateTimesMSToHandlesValues = (event: RangeSliderEvent) =>
+    (timesMS = sortedNumericAscending(new Set(event.detail.values)));
+  const seekToPreviousKeyTimeMS = () => seek(Math.max(...previousKeyTimesMS));
+  const seekToNextKeyTimeMS = () => seek(Math.min(...nextKeyTimesMS));
+  const seekToRelativeTimeMS = (relativeTimeMS: number) => seek(Math.round((currentTimeMS + relativeTimeMS) / 10) * 10);
 
   const copyMarkers = () => {
     navigator.clipboard.writeText(articleLines.join('\n\n'));
@@ -121,8 +100,8 @@
       bind:currentTime
       bind:duration
       bind:paused
+      bind:seek
       bind:togglePlayback
-      bind:pauseIfPlaying
       {figureStyles}
       src={videoFile.url}
     />
@@ -135,8 +114,8 @@
           handleFormatter={formatMillisecondsAsSecondsAndMilliseconds}
           springValues={{ stiffness: 1, damping: 1 }}
           values={timesMS}
-          on:start={pauseIfPlaying}
-          on:change={updateVideoCurrentTimeToHandleValue}
+          on:start={seekToHandleValue}
+          on:change={seekToHandleValue}
           on:stop={updateTimesMSToHandlesValues}
         />
       </div>
@@ -159,7 +138,7 @@
             size="field"
             tooltipAlignment="start"
             tooltipPosition="bottom"
-            on:click={jumpToPreviousKeyTimeMS}
+            on:click={seekToPreviousKeyTimeMS}
           />
           <Button
             disabled={currentTimeMS - 10 < 0}
@@ -169,7 +148,7 @@
             size="field"
             tooltipAlignment="start"
             tooltipPosition="bottom"
-            on:click={() => stepCurrentTime(-10)}
+            on:click={() => seekToRelativeTimeMS(-10)}
           />
         </div>
         <div data-group="right">
@@ -181,7 +160,7 @@
             size="field"
             tooltipAlignment="end"
             tooltipPosition="bottom"
-            on:click={() => stepCurrentTime(10)}
+            on:click={() => seekToRelativeTimeMS(10)}
           />
           <Button
             disabled={nextKeyTimesMS.length === 0}
@@ -191,7 +170,7 @@
             size="field"
             tooltipAlignment="end"
             tooltipPosition="bottom"
-            on:click={jumpToNextKeyTimeMS}
+            on:click={seekToNextKeyTimeMS}
           />
           {#if isCurrentTimeMSMarked}
             <Button
@@ -230,7 +209,7 @@
     {#each Object.keys(stillFrames) as timeMS, index}
       <div>
         <pre>{articleLines[index + 1]}</pre>
-        <figure style={figureStyles} on:click={() => (currentTime = millisecondsToSeconds(+timeMS))}>
+        <figure style={figureStyles} on:click={() => seek(+timeMS)}>
           <AspectRatio ratio="4x3">
             <img src={URL.createObjectURL(stillFrames[timeMS])} alt={`A still image of the video at ${timeMS}ms`} />
           </AspectRatio>

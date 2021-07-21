@@ -1,16 +1,24 @@
 <script lang="ts">
   import AspectRatio from 'carbon-components-svelte/src/AspectRatio/AspectRatio.svelte';
   import { onMount } from 'svelte';
-  import { isTouchEvent } from '../../utils';
-
-  export const pauseIfPlaying = () => !paused && videoEl.pause();
-  export const togglePlayback = () => videoEl[paused ? 'play' : 'pause']();
+  import { isTouchEvent, millisecondsToSeconds } from '../../utils';
 
   export let src: string;
   export let figureStyles: string | undefined;
   export let currentTime: number;
   export let duration: number;
   export let paused: boolean;
+
+  export const seek = (timeMS: number, shouldPlaybackContinue: boolean = false) => {
+    if (!shouldPlaybackContinue) {
+      pauseIfPlaying();
+    }
+
+    currentTime = millisecondsToSeconds(timeMS);
+  };
+  export const togglePlayback = () => videoEl[paused ? 'play' : 'pause']();
+
+  const pauseIfPlaying = () => !paused && videoEl.pause();
 
   let videoEl: HTMLVideoElement;
   let isAcceptingPointerMovement: boolean = false;

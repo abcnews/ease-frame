@@ -28,20 +28,8 @@ export interface StillFrames {
   [key: number]: Blob;
 }
 
-export interface RangeSliderChangeEvent extends CustomEvent {
+export interface RangeSliderEvent extends CustomEvent {
   detail: {
-    activeHandle: number;
-    startValue: number;
-    previousValue: number;
-    value: number;
-    values: number[];
-  };
-}
-
-export interface RangeSliderStopEvent extends CustomEvent {
-  detail: {
-    activeHandle: number;
-    startValue: number;
     value: number;
     values: number[];
   };
