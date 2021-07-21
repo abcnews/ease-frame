@@ -1,0 +1,49 @@
+<script lang="ts">
+  import Button from 'carbon-components-svelte/src/Button/Button.svelte';
+  import Hashtag24 from 'carbon-icons-svelte/lib/Hashtag24/Hashtag24.svelte';
+  import ImageCopy24 from 'carbon-icons-svelte/lib/ImageCopy24/ImageCopy24.svelte';
+  import JSZip from 'jszip';
+  import { saveAs } from 'file-saver';
+  import type { StillFrames, VideoDocument } from '../Editor/constants';
+
+  export let articleLines: string[];
+  export let durationMS: number;
+  export let videoDocument: VideoDocument;
+  export let timesMS: number[];
+  export let stillFrames: StillFrames;
+
+  const copyMarkers = () => {
+    navigator.clipboard.writeText(articleLines.join('\n\n'));
+  };
+
+  const exportAssets = async () => {
+    const zip = new JSZip();
+    const numDurationMSChars = String(durationMS).length;
+    const name = `ease-frame-${videoDocument.id}`;
+
+    // Images
+    timesMS.forEach(timeMS => {
+      zip.file(`${name}-image-${String(timeMS).padStart(numDurationMSChars, '0')}.png`, stillFrames[timeMS]);
+    });
+
+    // Text
+    zip.file(`${name}-text.txt`, articleLines.join('\n\n'));
+
+    // Archive
+    const zipFile = await zip.generateAsync({ type: 'blob' });
+
+    saveAs(zipFile, `${name}.zip`);
+  };
+</script>
+
+<div>
+  <Button icon={Hashtag24} kind="secondary" size="field" on:click={copyMarkers}>Copy Markers</Button>
+  <Button icon={ImageCopy24} size="field" on:click={exportAssets}>Export Assets</Button>
+</div>
+
+<style>
+  div > :global(*) {
+    width: 100%;
+    max-width: none;
+  }
+</style>

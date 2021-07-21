@@ -86,7 +86,7 @@
     {#if isCurrentTimeMSMarked}
       <Button
         icon={TrashCan24}
-        iconDescription="Remove mark from current time"
+        iconDescription="Remove mark at current time"
         kind="danger"
         size="field"
         tooltipAlignment="end"

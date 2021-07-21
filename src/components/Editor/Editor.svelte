@@ -1,10 +1,6 @@
 <script lang="ts">
-  import Button from 'carbon-components-svelte/src/Button/Button.svelte';
-  import Hashtag24 from 'carbon-icons-svelte/lib/Hashtag24/Hashtag24.svelte';
-  import ImageCopy24 from 'carbon-icons-svelte/lib/ImageCopy24/ImageCopy24.svelte';
-  import JSZip from 'jszip';
-  import { saveAs } from 'file-saver';
   import { secondsToMilliseconds } from '../../utils';
+  import Exporter from '../Exporter/Exporter.svelte';
   import Figure from '../Figure/Figure.svelte';
   import Nav from '../Nav/Nav.svelte';
   import PreferencesManager from '../Preferences/PreferencesManager.svelte';
@@ -40,37 +36,14 @@
   ];
   $: shouldStillFramesUpdate(videoFile, timesMS, stillFrames) &&
     getNextStillFrames(videoFile, timesMS, stillFrames).then(nextStillFrames => (stillFrames = nextStillFrames));
-
-  const copyMarkers = () => {
-    navigator.clipboard.writeText(articleLines.join('\n\n'));
-  };
-
-  const exportAssets = async () => {
-    const zip = new JSZip();
-    const numDurationMSChars = String(durationMS).length;
-    const name = `ease-frame-${videoDocument.id}`;
-
-    // Images
-    timesMS.forEach(timeMS => {
-      zip.file(`${name}-image-${String(timeMS).padStart(numDurationMSChars, '0')}.png`, stillFrames[timeMS]);
-    });
-
-    // Text
-    zip.file(`${name}-text.txt`, articleLines.join('\n\n'));
-
-    // Archive
-    const zipFile = await zip.generateAsync({ type: 'blob' });
-
-    saveAs(zipFile, `${name}.zip`);
-  };
 </script>
 
 <section>
   <article>
     <Video bind:currentTime bind:duration bind:paused bind:seek bind:togglePlayback src={videoFile.url} />
     {#if durationMS > 0}
-      <Timeline {currentTimeMS} {durationMS} {timesMS} {seek} />
-      <Nav {currentTimeMS} {durationMS} {timesMS} {seek} {togglePlayback} {paused} />
+      <Timeline bind:timesMS {currentTimeMS} {durationMS} {seek} />
+      <Nav bind:timesMS {currentTimeMS} {durationMS} {seek} {togglePlayback} {paused} />
     {/if}
   </article>
   <aside>
@@ -97,8 +70,7 @@
     </div>
     {#if timesMS.length > 0}
       <footer>
-        <Button icon={Hashtag24} kind="secondary" size="field" on:click={copyMarkers}>Copy Markers</Button>
-        <Button icon={ImageCopy24} size="field" on:click={exportAssets}>Export Assets</Button>
+        <Exporter {durationMS} {videoDocument} {timesMS} {articleLines} {stillFrames} />
       </footer>
     {/if}
   </aside>
@@ -174,19 +146,7 @@
     cursor: pointer;
   }
 
-  aside img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    vertical-align: bottom;
-  }
-
   aside footer {
     margin-top: auto;
-  }
-
-  aside footer > :global(*) {
-    width: 100%;
-    max-width: none;
   }
 </style>
