@@ -27,10 +27,3 @@ export type VideoDocument = {
 export interface StillFrames {
   [key: number]: Blob;
 }
-
-export interface RangeSliderEvent extends CustomEvent {
-  detail: {
-    value: number;
-    values: number[];
-  };
-}

@@ -12,7 +12,6 @@
   import TrashCan24 from 'carbon-icons-svelte/lib/TrashCan24/TrashCan24.svelte';
   import JSZip from 'jszip';
   import { saveAs } from 'file-saver';
-  import RangeSlider from 'svelte-range-slider-pips';
   import {
     formatMillisecondsAsSecondsAndMilliseconds,
     secondsToMilliseconds,
@@ -21,8 +20,9 @@
   import Figure from '../Figure/Figure.svelte';
   import PreferencesManager from '../Preferences/PreferencesManager.svelte';
   import { default as preferences } from '../Preferences/store';
+  import Timeline from '../Timeline/Timeline.svelte';
   import Video from '../Video/Video.svelte';
-  import type { RangeSliderEvent, StillFrames, VideoDocument } from './constants';
+  import type { StillFrames, VideoDocument } from './constants';
   import { getNextStillFrames, getVideoFile, shouldStillFramesUpdate } from './utils';
 
   export let videoDocument: VideoDocument;
@@ -36,9 +36,9 @@
 
   let seek: Video['seek'];
   let togglePlayback: Video['togglePlayback'];
-  let currentTime: number = 0;
-  let duration: number = 0;
-  let paused: boolean = true;
+  let currentTime: HTMLVideoElement['currentTime'] = 0;
+  let duration: HTMLVideoElement['duration'] = 0;
+  let paused: HTMLVideoElement['paused'] = true;
   let timesMS: number[] = [];
   let stillFrames: StillFrames = {};
 
@@ -58,9 +58,6 @@
 
   const addCurrentTimeMS = () => (timesMS = sortedNumericAscending([...timesMS, currentTimeMS]));
   const removeCurrentTimeMS = () => (timesMS = timesMS.filter(timeMS => timeMS !== currentTimeMS));
-  const seekToHandleValue = (event: RangeSliderEvent) => seek(event.detail.value);
-  const updateTimesMSToHandlesValues = (event: RangeSliderEvent) =>
-    (timesMS = sortedNumericAscending(new Set(event.detail.values)));
   const seekToPreviousKeyTimeMS = () => seek(Math.max(...previousKeyTimesMS));
   const seekToNextKeyTimeMS = () => seek(Math.min(...nextKeyTimesMS));
   const seekBy = (diffMS: number) => seek(Math.round((currentTimeMS + diffMS) / 10) * 10);
@@ -93,20 +90,7 @@
   <article>
     <Video bind:currentTime bind:duration bind:paused bind:seek bind:togglePlayback src={videoFile.url} />
     {#if durationMS > 0}
-      <div class="timeline">
-        <RangeSlider
-          min={0}
-          max={durationMS}
-          step={1}
-          handleFormatter={formatMillisecondsAsSecondsAndMilliseconds}
-          springValues={{ stiffness: 1, damping: 1 }}
-          values={timesMS}
-          on:start={seekToHandleValue}
-          on:change={seekToHandleValue}
-          on:stop={updateTimesMSToHandlesValues}
-        />
-        <progress value={currentTime / duration || 0} />
-      </div>
+      <Timeline {currentTimeMS} {durationMS} {timesMS} {seek} />
       <nav>
         <div data-group="left">
           <Button
@@ -220,14 +204,6 @@
 
 <style>
   section {
-    --range-handle: var(--primary);
-    --range-handle-inactive: var(--primary);
-    --range-handle-focus: var(--primary);
-    --range-float-text: #000;
-    --range-pip: #fff;
-    --range-pip-text: #000;
-    --range-slider: var(--tint);
-
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -249,43 +225,6 @@
 
   article > * {
     width: 100%;
-  }
-
-  .timeline {
-    position: relative;
-    margin: 1.5rem 0;
-    font-size: 1rem;
-  }
-
-  .timeline :global(.rangeSlider) {
-    margin: 0;
-    border-radius: 0;
-  }
-
-  progress {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    display: block;
-    border: 0;
-    width: 100%;
-    height: 100%;
-    -webkit-appearance: none;
-    appearance: none;
-    pointer-events: none;
-    transition: opacity 0.25s;
-  }
-
-  progress::-webkit-progress-bar {
-    background-color: transparent;
-  }
-
-  progress::-moz-progress-bar {
-    background-color: var(--primary);
-  }
-
-  progress::-webkit-progress-value {
-    background-color: var(--primary);
   }
 
   nav {
