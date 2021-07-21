@@ -50,9 +50,7 @@
   $: previousKeyTimesMS = keyTimesMS.filter(timeMS => timeMS < currentTimeMS);
   $: nextKeyTimesMS = keyTimesMS.filter(timeMS => timeMS > currentTimeMS);
   $: articleLines = [
-    `#easeframe${videoDocument.id}${$preferences.inset ? `INSET${$preferences.inset}` : ''}${
-      $preferences.background ? `BACKGROUND${$preferences.background.replace('#', '')}` : ''
-    }`,
+    `#easeframe${videoDocument.id}${$preferences && preferences.getAlternatingCase()}`,
     ...timesMS.map(timeMS => `#markTIME${timeMS}`),
     `#endeaseframe`
   ];

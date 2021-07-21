@@ -1,8 +1,6 @@
-import { writable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 
-export type BackgroundControlValue = string;
 export type BackgroundPreference = string | null;
-export type InsetControlValue = 'left' | 'center' | 'right' | 'none';
 export type InsetPreference = 'left' | 'center' | 'right' | null;
 
 export type Preferences = {
@@ -18,16 +16,25 @@ export const DEFAULTS: Preferences = {
 const createPreferencesStore = () => {
   const state = DEFAULTS;
 
-  const { subscribe, update } = writable(state);
+  const store = writable(state);
+  const { set, subscribe, update } = store;
 
   return {
-    subscribe,
+    getAlternatingCase() {
+      const { background, inset } = get(store);
+
+      return `${inset ? `INSET${inset}` : ''}${background ? `BACKGROUND${background.replace('#', '')}` : ''}`;
+    },
+    reset() {
+      set(DEFAULTS);
+    },
     setBackground(value: BackgroundPreference) {
       update(state => ({ ...state, background: value }));
     },
     setInset(value: InsetPreference) {
       update(state => ({ ...state, inset: value }));
-    }
+    },
+    subscribe
   };
 };
 
