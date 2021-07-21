@@ -70,7 +70,7 @@
     </div>
     {#if timesMS.length > 0}
       <footer>
-        <Exporter {durationMS} {videoDocument} {timesMS} {articleLines} {stillFrames} />
+        <Exporter {videoDocument} {articleLines} {stillFrames} />
       </footer>
     {/if}
   </aside>

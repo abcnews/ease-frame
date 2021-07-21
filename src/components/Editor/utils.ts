@@ -1,4 +1,4 @@
-import { millisecondsToSeconds, oneShotEvent, sortedNumericAscending } from '../../utils';
+import { millisecondsToSeconds, oneShotEvent, sortedNumericAscendingKeys } from '../../utils';
 import type { StillFrames, VideoDocument, VideoFile } from './constants';
 
 const isFileAsTallAsOrTallerThanWide = (file: VideoFile) => file.height >= file.width;
@@ -23,10 +23,7 @@ const stillFramesVideoEl = Object.entries<string>({
 
 export const shouldStillFramesUpdate = (videoFile: VideoFile, timesMS: number[], stillFrames: StillFrames): boolean => {
   // We should update if our stillFrames keys don't match our timesMS values
-  return (
-    stillFramesVideoEl.src !== videoFile.url ||
-    sortedNumericAscending(Object.keys(stillFrames).map(x => +x)).join() !== timesMS.join()
-  );
+  return stillFramesVideoEl.src !== videoFile.url || sortedNumericAscendingKeys(stillFrames).join() !== timesMS.join();
 };
 
 export const getNextStillFrames = async (

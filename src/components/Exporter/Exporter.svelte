@@ -4,12 +4,11 @@
   import ImageCopy24 from 'carbon-icons-svelte/lib/ImageCopy24/ImageCopy24.svelte';
   import JSZip from 'jszip';
   import { saveAs } from 'file-saver';
+  import { sortedNumericAscendingKeys } from '../../utils';
   import type { StillFrames, VideoDocument } from '../Editor/constants';
 
   export let articleLines: string[];
-  export let durationMS: number;
   export let videoDocument: VideoDocument;
-  export let timesMS: number[];
   export let stillFrames: StillFrames;
 
   const copyMarkers = () => {
@@ -18,7 +17,8 @@
 
   const exportAssets = async () => {
     const zip = new JSZip();
-    const numDurationMSChars = String(durationMS).length;
+    const timesMS = sortedNumericAscendingKeys(stillFrames);
+    const numDurationMSChars = String(timesMS[timesMS.length - 1]).length;
     const name = `ease-frame-${videoDocument.id}`;
 
     // Images

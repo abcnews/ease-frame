@@ -15,6 +15,9 @@ const comparatorNumericAscending = (a: number, b: number) => a - b;
 
 export const sortedNumericAscending = (iterable: Iterable<number>) => [...iterable].sort(comparatorNumericAscending);
 
+export const sortedNumericAscendingKeys = (object: { [key: number]: unknown }) =>
+  sortedNumericAscending(Object.keys(object).map(x => +x));
+
 export const isTouchEvent = (event: MouseEvent | TouchEvent): event is TouchEvent => 'touches' in event;
 
 export const oneShotEvent = <T extends EventTarget>(target: T, name: string) => {
