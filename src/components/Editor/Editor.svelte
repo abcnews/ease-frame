@@ -1,5 +1,4 @@
 <script lang="ts">
-  import AspectRatio from 'carbon-components-svelte/src/AspectRatio/AspectRatio.svelte';
   import Button from 'carbon-components-svelte/src/Button/Button.svelte';
   import BookmarkAdd24 from 'carbon-icons-svelte/lib/BookmarkAdd24/BookmarkAdd24.svelte';
   import Hashtag24 from 'carbon-icons-svelte/lib/Hashtag24/Hashtag24.svelte';
@@ -19,6 +18,7 @@
     secondsToMilliseconds,
     sortedNumericAscending
   } from '../../utils';
+  import Figure from '../Figure/Figure.svelte';
   import PreferencesManager from '../Preferences/PreferencesManager.svelte';
   import { default as preferences } from '../Preferences/store';
   import Video from '../Video/Video.svelte';
@@ -42,7 +42,6 @@
   let timesMS: number[] = [];
   let stillFrames: StillFrames = {};
 
-  $: figureStyles = $preferences.background ? `background: ${$preferences.background};` : undefined;
   $: currentTimeMS = secondsToMilliseconds(currentTime);
   $: durationMS = secondsToMilliseconds(duration);
   $: isCurrentTimeMSMarked = timesMS.includes(currentTimeMS);
@@ -92,15 +91,7 @@
 
 <section>
   <article>
-    <Video
-      bind:currentTime
-      bind:duration
-      bind:paused
-      bind:seek
-      bind:togglePlayback
-      {figureStyles}
-      src={videoFile.url}
-    />
+    <Video bind:currentTime bind:duration bind:paused bind:seek bind:togglePlayback src={videoFile.url} />
     {#if durationMS > 0}
       <div class="mounts-input">
         <RangeSlider
@@ -205,11 +196,13 @@
     {#each Object.keys(stillFrames) as timeMS, index}
       <div>
         <pre>{articleLines[index + 1]}</pre>
-        <figure style={figureStyles} on:click={() => seek(+timeMS)}>
-          <AspectRatio ratio="4x3">
-            <img src={URL.createObjectURL(stillFrames[timeMS])} alt={`A still image of the video at ${timeMS}ms`} />
-          </AspectRatio>
-        </figure>
+        <Figure>
+          <img
+            src={URL.createObjectURL(stillFrames[timeMS])}
+            alt={`A still image of the video at ${timeMS}ms`}
+            on:click={() => seek(+timeMS)}
+          />
+        </Figure>
       </div>
     {/each}
     <div>
@@ -226,7 +219,6 @@
 
 <style>
   section {
-    --figure-gradient: repeating-linear-gradient(-45deg, #c6c6c6, #c6c6c6 0.25rem, #8d8d8d 0.25rem, #8d8d8d 0.5rem);
     --range-handle: var(--primary);
     --range-handle-inactive: var(--primary);
     --range-handle-focus: var(--primary);
@@ -348,10 +340,9 @@
     margin-right: 0.75rem;
   }
 
-  aside figure {
+  aside :global(figure) {
     margin: 0;
     width: 5.334rem;
-    background-image: var(--figure-gradient);
     cursor: pointer;
   }
 

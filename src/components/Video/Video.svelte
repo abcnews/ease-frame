@@ -1,10 +1,9 @@
 <script lang="ts">
-  import AspectRatio from 'carbon-components-svelte/src/AspectRatio/AspectRatio.svelte';
   import { onMount } from 'svelte';
+  import Figure from '../Figure/Figure.svelte';
   import { isTouchEvent, millisecondsToSeconds } from '../../utils';
 
   export let src: string;
-  export let figureStyles: string | undefined;
   export let currentTime: number;
   export let duration: number;
   export let paused: boolean;
@@ -68,14 +67,13 @@
   });
 </script>
 
-<figure
-  style={figureStyles}
-  on:mousedown={handleVideoPointerDown}
-  on:touchstart={handleVideoPointerDown}
-  on:mousemove={handleVideoPointerMove}
-  on:touchmove={handleVideoPointerMove}
->
-  <AspectRatio ratio="4x3">
+<Figure>
+  <div
+    on:mousedown={handleVideoPointerDown}
+    on:touchstart={handleVideoPointerDown}
+    on:mousemove={handleVideoPointerMove}
+    on:touchmove={handleVideoPointerMove}
+  >
     <video
       bind:this={videoEl}
       bind:currentTime
@@ -87,24 +85,17 @@
       preload="auto"
       {src}
     />
-  </AspectRatio>
-  <progress value={currentTime / duration || 0} />
-</figure>
+    <progress value={currentTime / duration || 0} />
+  </div>
+</Figure>
 
 <style lang="scss">
-  figure {
-    position: relative;
-    overflow: hidden;
-    margin: 0 0 1rem;
-    background-image: var(--figure-gradient);
-    touch-action: none;
-  }
-
-  figure :global(video) {
+  div {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    object-fit: contain;
-    vertical-align: bottom;
     cursor: ew-resize;
   }
 
