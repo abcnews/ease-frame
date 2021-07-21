@@ -9,5 +9,8 @@
 .DS_Store
 npm-debug.log
 
+# debug environment variables
+/.env
+
 # redirect
 /.redirect

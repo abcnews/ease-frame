@@ -10,9 +10,7 @@
   import Editor from '../Editor/Editor.svelte';
   import type { VideoDocument } from '../Editor/constants';
 
-  export let debugTextInputValue: string;
-
-  let textInputValue: string = debugTextInputValue || '';
+  let videoReference: string = process.env.EASE_FRAME_DEBUG_VIDEO_REFERENCE || '';
   let preferredVideoOrientation: 'landscape' | 'portrait' = 'landscape';
   let videoDocument: VideoDocument | null = null;
   let isFetching: boolean = false;
@@ -24,7 +22,7 @@
   const isNumericString = (value: string) => String(parseInt(value, 10)) === value;
 
   const loadVideoDocument = () => {
-    const id = isNumericString(textInputValue) ? textInputValue : url2cmid(textInputValue);
+    const id = isNumericString(videoReference) ? videoReference : url2cmid(videoReference);
 
     if (!id) {
       errorMessage = `Couldn't parse a Core Media document ID`;
@@ -66,7 +64,7 @@
         disabled={isFetching}
         invalid={errorMessage !== null}
         invalidText={errorMessage || undefined}
-        bind:value={textInputValue}
+        bind:value={videoReference}
         on:keydown={clearError}
         on:focus={clearError}
       />
