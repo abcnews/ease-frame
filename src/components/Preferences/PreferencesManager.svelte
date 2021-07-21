@@ -74,7 +74,7 @@
   </Popover>
 </div>
 
-<style lang="scss">
+<style>
   menu {
     margin: 0;
     padding: 0.75rem 0.75rem 1rem;

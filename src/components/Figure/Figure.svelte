@@ -11,7 +11,7 @@
   </AspectRatio>
 </figure>
 
-<style lang="scss">
+<style>
   figure {
     position: relative;
     overflow: hidden;
