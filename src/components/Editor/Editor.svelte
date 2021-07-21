@@ -19,9 +19,8 @@
     secondsToMilliseconds,
     sortedNumericAscending
   } from '../../utils';
-  import { DEFAULT_PREFERENCES } from '../PreferencesManager/constants';
-  import type { Preferences } from '../PreferencesManager/constants';
-  import PreferencesManager from '../PreferencesManager/PreferencesManager.svelte';
+  import PreferencesManager from '../Preferences/PreferencesManager.svelte';
+  import { default as preferences } from '../Preferences/store';
   import Video from '../Video/Video.svelte';
   import type { RangeSliderEvent, StillFrames, VideoDocument } from './constants';
   import { getNextStillFrames, getVideoFile, shouldStillFramesUpdate } from './utils';
@@ -42,9 +41,8 @@
   let paused: boolean = true;
   let timesMS: number[] = [];
   let stillFrames: StillFrames = {};
-  let preferences: Preferences = DEFAULT_PREFERENCES;
 
-  $: figureStyles = preferences.background ? `background: ${preferences.background};` : undefined;
+  $: figureStyles = $preferences.background ? `background: ${$preferences.background};` : undefined;
   $: currentTimeMS = secondsToMilliseconds(currentTime);
   $: durationMS = secondsToMilliseconds(duration);
   $: isCurrentTimeMSMarked = timesMS.includes(currentTimeMS);
@@ -52,8 +50,8 @@
   $: previousKeyTimesMS = keyTimesMS.filter(timeMS => timeMS < currentTimeMS);
   $: nextKeyTimesMS = keyTimesMS.filter(timeMS => timeMS > currentTimeMS);
   $: articleLines = [
-    `#easeframe${videoDocument.id}${preferences.inset ? `INSET${preferences.inset}` : ''}${
-      preferences.background ? `BACKGROUND${preferences.background.replace('#', '')}` : ''
+    `#easeframe${videoDocument.id}${$preferences.inset ? `INSET${$preferences.inset}` : ''}${
+      $preferences.background ? `BACKGROUND${$preferences.background.replace('#', '')}` : ''
     }`,
     ...timesMS.map(timeMS => `#markTIME${timeMS}`),
     `#endeaseframe`
@@ -68,7 +66,7 @@
     (timesMS = sortedNumericAscending(new Set(event.detail.values)));
   const seekToPreviousKeyTimeMS = () => seek(Math.max(...previousKeyTimesMS));
   const seekToNextKeyTimeMS = () => seek(Math.min(...nextKeyTimesMS));
-  const seekToRelativeTimeMS = (relativeTimeMS: number) => seek(Math.round((currentTimeMS + relativeTimeMS) / 10) * 10);
+  const seekBy = (diffMS: number) => seek(Math.round((currentTimeMS + diffMS) / 10) * 10);
 
   const copyMarkers = () => {
     navigator.clipboard.writeText(articleLines.join('\n\n'));
@@ -148,7 +146,7 @@
             size="field"
             tooltipAlignment="start"
             tooltipPosition="bottom"
-            on:click={() => seekToRelativeTimeMS(-10)}
+            on:click={() => seekBy(-10)}
           />
         </div>
         <div data-group="right">
@@ -160,7 +158,7 @@
             size="field"
             tooltipAlignment="end"
             tooltipPosition="bottom"
-            on:click={() => seekToRelativeTimeMS(10)}
+            on:click={() => seekBy(10)}
           />
           <Button
             disabled={nextKeyTimesMS.length === 0}
@@ -203,7 +201,7 @@
     <div>
       <pre>{articleLines[0].replace(/([A-Z]+)/g, '\n…$1')}</pre>
       <div class="preferences">
-        <PreferencesManager on:change={({ detail }) => (preferences = detail)} />
+        <PreferencesManager />
       </div>
     </div>
     {#each Object.keys(stillFrames) as timeMS, index}
