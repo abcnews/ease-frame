@@ -13,9 +13,7 @@
 
   export let importedProject: ImportedProject | undefined;
 
-  let videoReference: string = importedProject
-    ? importedProject.videoReference
-    : process.env.EASE_FRAME_DEBUG_VIDEO_REFERENCE || '';
+  let videoReference: string = importedProject ? importedProject.videoReference : '';
   let preferredVideoOrientation: 'landscape' | 'portrait' = 'landscape';
   let videoDocument: VideoDocument | null = null;
   let isFetching: boolean = false;
