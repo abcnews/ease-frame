@@ -20,6 +20,22 @@ export const sortedNumericAscending = (iterable: Iterable<number>) => [...iterab
 export const sortedNumericAscendingKeys = (object: { [key: number]: unknown }) =>
   sortedNumericAscending(Object.keys(object).map(x => +x));
 
+export const onlyStringProps = (input: {}): { [key: string]: string } => {
+  const output = {};
+
+  Object.keys(input).forEach(prop => {
+    if (typeof input[prop] === 'string') {
+      output[prop] = input[prop];
+    }
+  });
+
+  return output;
+};
+
+const HEX_COLOR_PATTERN = /^([0-9a-f]{3}){1,2}$/;
+
+export const resolveHexColor = (color: string) => `${HEX_COLOR_PATTERN.test(color) ? '#' : ''}${color}`;
+
 export const isTouchEvent = (event: MouseEvent | TouchEvent): event is TouchEvent => 'touches' in event;
 
 export const oneShotEvent = <T extends EventTarget>(target: T, name: string) => {

@@ -1,20 +1,29 @@
 <script lang="ts">
   import Button from 'carbon-components-svelte/src/Button/Button.svelte';
+  import CopyLink24 from 'carbon-icons-svelte/lib/CopyLink24/CopyLink24.svelte';
   import Hashtag24 from 'carbon-icons-svelte/lib/Hashtag24/Hashtag24.svelte';
   import ImageCopy24 from 'carbon-icons-svelte/lib/ImageCopy24/ImageCopy24.svelte';
   import JSZip from 'jszip';
   import { saveAs } from 'file-saver';
   import type { StillFrames, VideoDocument } from '../../constants';
-  import { sortedNumericAscendingKeys } from '../../utils';
+  import { default as preferences } from '../../stores/preferences';
+  import { onlyStringProps, sortedNumericAscendingKeys } from '../../utils';
 
   export let articleLines: string[];
   export let videoDocument: VideoDocument;
   export let stillFrames: StillFrames;
 
-  const copyMarkers = () => {
-    navigator.clipboard.writeText(articleLines.join('\n\n'));
-  };
+  $: shareURL = `${String(window.location.href).split('?')[0]}?${new URLSearchParams(
+    onlyStringProps({
+      v: videoDocument.id,
+      t: Object.keys(stillFrames).join('-'),
+      b: $preferences.background,
+      i: $preferences.inset
+    })
+  ).toString()}`;
 
+  const copyShareURL = () => navigator.clipboard.writeText(shareURL);
+  const copyMarkers = () => navigator.clipboard.writeText(articleLines.join('\n\n'));
   const exportAssets = async () => {
     const zip = new JSZip();
     const timesMS = sortedNumericAscendingKeys(stillFrames);
@@ -37,6 +46,7 @@
 </script>
 
 <div>
+  <Button icon={CopyLink24} kind="secondary" size="field" on:click={copyShareURL}>Share link to project</Button>
   <Button icon={Hashtag24} kind="secondary" size="field" on:click={copyMarkers}>Copy Markers</Button>
   <Button icon={ImageCopy24} size="field" on:click={exportAssets}>Export Assets</Button>
 </div>

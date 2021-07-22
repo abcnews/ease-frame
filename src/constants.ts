@@ -1,3 +1,10 @@
+import type { Preferences } from './stores/preferences';
+
+export interface ImportedProject extends Preferences {
+  videoReference: string;
+  timesMS: number[];
+}
+
 export interface VideoFile {
   size: number;
   width: number;

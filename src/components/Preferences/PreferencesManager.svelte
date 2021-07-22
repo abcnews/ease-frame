@@ -5,11 +5,13 @@
   import RadioButtonGroup from 'carbon-components-svelte/src/RadioButtonGroup/RadioButtonGroup.svelte';
   import Toggle from 'carbon-components-svelte/src/Toggle/Toggle.svelte';
   import Settings24 from 'carbon-icons-svelte/lib/Settings24/Settings24.svelte';
+  import { get } from 'svelte/store';
   import { default as preferences } from '../../stores/preferences';
+  import { resolveHexColor } from '../../utils';
 
   let windowInnerWidth: number;
   let open: boolean;
-  let color: string = '#666666';
+  let color: string = get(preferences).background || '666666';
 
   $: shouldPopoverOpenAboveButton = windowInnerWidth <= 960;
 </script>
@@ -50,11 +52,11 @@
       <li>
         <input
           type="color"
-          value={color}
+          value={resolveHexColor(color)}
           on:input={event => {
             const { value } = event.currentTarget;
 
-            color = value;
+            color = value.replace('#', '');
             preferences.setBackground(color);
           }}
           disabled={$preferences.background === null}

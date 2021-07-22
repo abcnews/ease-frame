@@ -1,9 +1,10 @@
 <script lang="ts">
-  import type { VideoDocument } from '../../constants';
+  import type { ImportedProject, VideoDocument } from '../../constants';
   import { getVideoFile } from '../../utils';
   import ContentConsole from '../ContentConsole/ContentConsole.svelte';
   import VideoConsole from '../VideoConsole/VideoConsole.svelte';
 
+  export let importedProject: ImportedProject | undefined;
   export let videoDocument: VideoDocument;
   export let isPortraitPreferred: boolean = false;
 
@@ -14,7 +15,7 @@
   }
 
   let seek: VideoConsole['seek'];
-  let timesMS: number[] = [];
+  let timesMS: number[] = (importedProject && importedProject.timesMS) || [];
 </script>
 
 <section>

@@ -1,8 +1,9 @@
 <script lang="ts">
   import AspectRatio from 'carbon-components-svelte/src/AspectRatio/AspectRatio.svelte';
   import { default as preferences } from '../../stores/preferences';
+  import { resolveHexColor } from '../../utils';
 
-  $: figureStyles = $preferences.background ? `background: ${$preferences.background};` : undefined;
+  $: figureStyles = $preferences.background ? `background: ${resolveHexColor($preferences.background)};` : undefined;
 </script>
 
 <figure style={figureStyles}>

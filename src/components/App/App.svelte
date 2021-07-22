@@ -7,10 +7,15 @@
   import RadioButtonGroup from 'carbon-components-svelte/src/RadioButtonGroup/RadioButtonGroup.svelte';
   import TextInput from 'carbon-components-svelte/src/TextInput/TextInput.svelte';
   import DocumentVideo24 from 'carbon-icons-svelte/lib/DocumentVideo24/DocumentVideo24.svelte';
-  import type { VideoDocument } from '../../constants';
+  import type { ImportedProject, VideoDocument } from '../../constants';
+  import { default as preferences } from '../../stores/preferences';
   import Editor from '../Editor/Editor.svelte';
 
-  let videoReference: string = process.env.EASE_FRAME_DEBUG_VIDEO_REFERENCE || '';
+  export let importedProject: ImportedProject | undefined;
+
+  let videoReference: string = importedProject
+    ? importedProject.videoReference
+    : process.env.EASE_FRAME_DEBUG_VIDEO_REFERENCE || '';
   let preferredVideoOrientation: 'landscape' | 'portrait' = 'landscape';
   let videoDocument: VideoDocument | null = null;
   let isFetching: boolean = false;
@@ -21,13 +26,19 @@
 
   const isNumericString = (value: string) => String(parseInt(value, 10)) === value;
 
+  const fail = (reason: string) => {
+    errorMessage = `${importedProject ? `Import failed. ` : ''}${reason}`;
+
+    if (importedProject) {
+      importedProject = undefined;
+    }
+  };
+
   const loadVideoDocument = () => {
     const id = isNumericString(videoReference) ? videoReference : url2cmid(videoReference);
 
     if (!id) {
-      errorMessage = `Couldn't parse a Core Media document ID`;
-
-      return;
+      return fail(`Couldn't parse a Core Media document ID`);
     }
 
     isFetching = true;
@@ -37,17 +48,19 @@
         isFetching = false;
 
         if (!isVideoDocument(terminusDocument)) {
-          errorMessage = `Core Media document isn't a Video`;
-
-          return;
+          return fail(`Core Media document isn't a Video`);
         }
 
         videoDocument = terminusDocument;
+
+        if (importedProject) {
+          preferences.import(importedProject);
+        }
       })
       .catch(_error => {
         isFetching = false;
 
-        errorMessage = `Couldn't fetch Core Media document`;
+        return fail(`Couldn't fetch Core Media document`);
       });
   };
 
@@ -55,7 +68,7 @@
 </script>
 
 {#if videoDocument}
-  <Editor {videoDocument} isPortraitPreferred={preferredVideoOrientation === 'portrait'} />
+  <Editor {importedProject} {videoDocument} isPortraitPreferred={preferredVideoOrientation === 'portrait'} />
 {:else}
   <section>
     <Form on:submit={loadVideoDocument}>
@@ -72,7 +85,9 @@
         <RadioButton labelText="Landscape" value="landscape" />
         <RadioButton labelText="Portrait" value="portrait" />
       </RadioButtonGroup>
-      <Button type="submit" disabled={isFetching} icon={DocumentVideo24} size="field">Load video</Button>
+      <Button type="submit" disabled={isFetching} icon={DocumentVideo24} size="field"
+        >{`${importedProject ? 'Import' : 'Create'} project`}</Button
+      >
     </Form>
   </section>
 {/if}
