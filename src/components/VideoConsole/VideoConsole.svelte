@@ -72,27 +72,29 @@
   });
 </script>
 
-<Figure>
-  <video
-    bind:this={videoEl}
-    bind:currentTime
-    bind:duration
-    bind:paused
-    crossorigin="anonymous"
-    muted
-    playsinline
-    preload="auto"
-    src={videoFile.url}
-    on:mousedown={handleVideoPointerDown}
-    on:touchstart={handleVideoPointerDown}
-    on:mousemove={handleVideoPointerMove}
-    on:touchmove={handleVideoPointerMove}
-  />
-</Figure>
-{#if durationMS > 0}
-  <Timeline bind:timesMS {currentTimeMS} {durationMS} {seek} />
-  <Nav bind:timesMS {currentTimeMS} {durationMS} {seek} {togglePlayback} {paused} />
-{/if}
+<div>
+  <Figure>
+    <video
+      bind:this={videoEl}
+      bind:currentTime
+      bind:duration
+      bind:paused
+      crossorigin="anonymous"
+      muted
+      playsinline
+      preload="auto"
+      src={videoFile.url}
+      on:mousedown={handleVideoPointerDown}
+      on:touchstart={handleVideoPointerDown}
+      on:mousemove={handleVideoPointerMove}
+      on:touchmove={handleVideoPointerMove}
+    />
+  </Figure>
+  {#if durationMS > 0}
+    <Timeline bind:timesMS {currentTimeMS} {durationMS} {seek} />
+    <Nav bind:timesMS {currentTimeMS} {durationMS} {seek} {togglePlayback} {paused} />
+  {/if}
+</div>
 
 <style>
   video {

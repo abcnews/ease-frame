@@ -5,7 +5,7 @@
   import RadioButtonGroup from 'carbon-components-svelte/src/RadioButtonGroup/RadioButtonGroup.svelte';
   import Toggle from 'carbon-components-svelte/src/Toggle/Toggle.svelte';
   import Settings24 from 'carbon-icons-svelte/lib/Settings24/Settings24.svelte';
-  import { default as preferences } from './store';
+  import { default as preferences } from '../../stores/preferences';
 
   let windowInnerWidth: number;
   let open: boolean;

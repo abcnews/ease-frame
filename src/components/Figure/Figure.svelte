@@ -1,6 +1,6 @@
 <script lang="ts">
   import AspectRatio from 'carbon-components-svelte/src/AspectRatio/AspectRatio.svelte';
-  import { default as preferences } from '../Preferences/store';
+  import { default as preferences } from '../../stores/preferences';
 
   $: figureStyles = $preferences.background ? `background: ${$preferences.background};` : undefined;
 </script>

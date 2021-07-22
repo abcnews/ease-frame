@@ -1,10 +1,7 @@
 <script lang="ts">
-  import type { StillFrames, VideoDocument } from '../../constants';
-  import { getNextStillFrames, getVideoFile, shouldStillFramesUpdate } from '../../utils';
-  import Exporter from '../Exporter/Exporter.svelte';
-  import Figure from '../Figure/Figure.svelte';
-  import PreferencesManager from '../Preferences/PreferencesManager.svelte';
-  import { default as preferences } from '../Preferences/store';
+  import type { VideoDocument } from '../../constants';
+  import { getVideoFile } from '../../utils';
+  import ContentConsole from '../ContentConsole/ContentConsole.svelte';
   import VideoConsole from '../VideoConsole/VideoConsole.svelte';
 
   export let videoDocument: VideoDocument;
@@ -18,15 +15,6 @@
 
   let seek: VideoConsole['seek'];
   let timesMS: number[] = [];
-  let stillFrames: StillFrames = {};
-
-  $: articleLines = [
-    `#easeframe${videoDocument.id}${$preferences && preferences.getAlternatingCase()}`,
-    ...timesMS.map(timeMS => `#markTIME${timeMS}`),
-    `#endeaseframe`
-  ];
-  $: shouldStillFramesUpdate(videoFile, timesMS, stillFrames) &&
-    getNextStillFrames(videoFile, timesMS, stillFrames).then(nextStillFrames => (stillFrames = nextStillFrames));
 </script>
 
 <section>
@@ -34,32 +22,7 @@
     <VideoConsole bind:timesMS bind:seek {videoFile} />
   </article>
   <aside>
-    <div>
-      <pre>{articleLines[0].replace(/([A-Z]+)/g, '\n…$1')}</pre>
-      <div class="preferences">
-        <PreferencesManager />
-      </div>
-    </div>
-    {#each Object.keys(stillFrames) as timeMS, index}
-      <div>
-        <pre>{articleLines[index + 1]}</pre>
-        <Figure>
-          <img
-            src={URL.createObjectURL(stillFrames[timeMS])}
-            alt={`A still image of the video at ${timeMS}ms`}
-            on:click={() => seek(+timeMS)}
-          />
-        </Figure>
-      </div>
-    {/each}
-    <div>
-      <pre>{articleLines[articleLines.length - 1]}</pre>
-    </div>
-    {#if timesMS.length > 0}
-      <footer>
-        <Exporter {videoDocument} {articleLines} {stillFrames} />
-      </footer>
-    {/if}
+    <ContentConsole bind:timesMS bind:seek {videoDocument} {videoFile} />
   </aside>
 </section>
 
@@ -78,58 +41,18 @@
 
   section > * {
     margin: 1rem;
-  }
-
-  article {
     width: calc(100% - 2rem);
+    min-height: 100%;
   }
 
   aside {
     flex-shrink: 0;
-    width: calc(100% - 2rem);
-    min-height: 100%;
-    display: flex;
-    flex-direction: column;
-    background-color: #f4f4f4;
-    font-size: 0.875rem;
   }
 
   @media (min-width: 60rem) {
     aside {
       margin-left: 0;
       max-width: 18rem;
-      font-size: 1rem;
     }
-  }
-
-  aside > div {
-    box-sizing: content-box;
-    height: 4rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  aside > div ~ div {
-    border-top: 1px solid #c6c6c6;
-  }
-
-  aside pre {
-    margin-left: 0.75rem;
-  }
-
-  aside .preferences {
-    position: relative;
-    margin-right: 0.75rem;
-  }
-
-  aside :global(figure) {
-    margin: 0;
-    width: 5.334rem;
-    cursor: pointer;
-  }
-
-  aside footer {
-    margin-top: auto;
   }
 </style>
