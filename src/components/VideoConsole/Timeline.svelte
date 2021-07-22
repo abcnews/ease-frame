@@ -1,7 +1,7 @@
 <script lang="ts">
   import RangeSlider from 'svelte-range-slider-pips';
   import { formatMillisecondsAsSecondsAndMilliseconds, sortedNumericAscending } from '../../utils';
-  import type Video from '../Video/Video.svelte';
+  import type VideoConsole from '../VideoConsole/VideoConsole.svelte';
 
   interface RangeSliderEvent extends CustomEvent {
     detail: {
@@ -13,7 +13,7 @@
   export let currentTimeMS: number;
   export let durationMS: number;
   export let timesMS: number[];
-  export let seek: Video['seek'];
+  export let seek: VideoConsole['seek'];
 
   const seekToHandleValue = (event: RangeSliderEvent) => seek(event.detail.value);
   const updateTimesMSToHandlesValues = (event: RangeSliderEvent) =>

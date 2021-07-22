@@ -4,8 +4,8 @@
   import ImageCopy24 from 'carbon-icons-svelte/lib/ImageCopy24/ImageCopy24.svelte';
   import JSZip from 'jszip';
   import { saveAs } from 'file-saver';
+  import type { StillFrames, VideoDocument } from '../../constants';
   import { sortedNumericAscendingKeys } from '../../utils';
-  import type { StillFrames, VideoDocument } from '../Editor/constants';
 
   export let articleLines: string[];
   export let videoDocument: VideoDocument;

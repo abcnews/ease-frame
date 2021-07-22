@@ -1,12 +1,19 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { isTouchEvent, secondsToMilliseconds, millisecondsToSeconds } from '../../utils';
+  import type { VideoFile } from '../../constants';
   import Figure from '../Figure/Figure.svelte';
-  import { isTouchEvent, millisecondsToSeconds } from '../../utils';
+  import Nav from './Nav.svelte';
+  import Timeline from './Timeline.svelte';
 
-  export let src: string;
-  export let currentTime: number;
-  export let duration: number;
-  export let paused: boolean;
+  export let timesMS: number[];
+  export let videoFile: VideoFile;
+
+  let videoEl: HTMLVideoElement;
+  let currentTime: HTMLVideoElement['currentTime'] = 0;
+  let duration: HTMLVideoElement['duration'] = 0;
+  let paused: HTMLVideoElement['paused'] = true;
+  let isAcceptingPointerMovement: boolean = false;
 
   export const seek = (timeMS: number, shouldPlaybackContinue: boolean = false) => {
     if (!shouldPlaybackContinue) {
@@ -15,14 +22,13 @@
 
     currentTime = millisecondsToSeconds(timeMS);
   };
-  export const togglePlayback = () => videoEl[paused ? 'play' : 'pause']();
+
+  $: currentTimeMS = secondsToMilliseconds(currentTime);
+  $: durationMS = secondsToMilliseconds(duration);
 
   const pauseIfPlaying = () => !paused && videoEl.pause();
-
-  let videoEl: HTMLVideoElement;
-  let isAcceptingPointerMovement: boolean = false;
-
-  function handleVideoPointerDown(event: MouseEvent | TouchEvent) {
+  const togglePlayback = () => videoEl[paused ? 'play' : 'pause']();
+  const handleVideoPointerDown = (event: MouseEvent | TouchEvent) => {
     pauseIfPlaying();
 
     const pointerLiftEventName = isTouchEvent(event) ? 'touchend' : 'mouseup';
@@ -43,9 +49,8 @@
     document.addEventListener(pointerLiftEventName, stop);
     document.addEventListener(pointerAbortEventName, stop);
     handleVideoPointerMove(event);
-  }
-
-  function handleVideoPointerMove(event: MouseEvent | TouchEvent) {
+  };
+  const handleVideoPointerMove = (event: MouseEvent | TouchEvent) => {
     if (!isAcceptingPointerMovement || event.type === 'touchend' || event.type === 'touchcancel') {
       return;
     }
@@ -54,7 +59,7 @@
     const { clientX } = isTouchEvent(event) ? event.touches[0] : event;
 
     currentTime = (duration * (clientX - left)) / (right - left);
-  }
+  };
 
   onMount(() => {
     videoEl.load();
@@ -77,13 +82,17 @@
     muted
     playsinline
     preload="auto"
-    {src}
+    src={videoFile.url}
     on:mousedown={handleVideoPointerDown}
     on:touchstart={handleVideoPointerDown}
     on:mousemove={handleVideoPointerMove}
     on:touchmove={handleVideoPointerMove}
   />
 </Figure>
+{#if durationMS > 0}
+  <Timeline bind:timesMS {currentTimeMS} {durationMS} {seek} />
+  <Nav bind:timesMS {currentTimeMS} {durationMS} {seek} {togglePlayback} {paused} />
+{/if}
 
 <style>
   video {

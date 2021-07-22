@@ -7,8 +7,8 @@
   import RadioButtonGroup from 'carbon-components-svelte/src/RadioButtonGroup/RadioButtonGroup.svelte';
   import TextInput from 'carbon-components-svelte/src/TextInput/TextInput.svelte';
   import DocumentVideo24 from 'carbon-icons-svelte/lib/DocumentVideo24/DocumentVideo24.svelte';
+  import type { VideoDocument } from '../../constants';
   import Editor from '../Editor/Editor.svelte';
-  import type { VideoDocument } from '../Editor/constants';
 
   let videoReference: string = process.env.EASE_FRAME_DEBUG_VIDEO_REFERENCE || '';
   let preferredVideoOrientation: 'landscape' | 'portrait' = 'landscape';

@@ -1,14 +1,11 @@
 <script lang="ts">
-  import { secondsToMilliseconds } from '../../utils';
+  import type { StillFrames, VideoDocument } from '../../constants';
+  import { getNextStillFrames, getVideoFile, shouldStillFramesUpdate } from '../../utils';
   import Exporter from '../Exporter/Exporter.svelte';
   import Figure from '../Figure/Figure.svelte';
-  import Nav from '../Nav/Nav.svelte';
   import PreferencesManager from '../Preferences/PreferencesManager.svelte';
   import { default as preferences } from '../Preferences/store';
-  import Timeline from '../Timeline/Timeline.svelte';
-  import Video from '../Video/Video.svelte';
-  import type { StillFrames, VideoDocument } from './constants';
-  import { getNextStillFrames, getVideoFile, shouldStillFramesUpdate } from './utils';
+  import VideoConsole from '../VideoConsole/VideoConsole.svelte';
 
   export let videoDocument: VideoDocument;
   export let isPortraitPreferred: boolean = false;
@@ -19,16 +16,10 @@
     throw new Error('Video document has no files');
   }
 
-  let seek: Video['seek'];
-  let togglePlayback: Video['togglePlayback'];
-  let currentTime: HTMLVideoElement['currentTime'] = 0;
-  let duration: HTMLVideoElement['duration'] = 0;
-  let paused: HTMLVideoElement['paused'] = true;
+  let seek: VideoConsole['seek'];
   let timesMS: number[] = [];
   let stillFrames: StillFrames = {};
 
-  $: currentTimeMS = secondsToMilliseconds(currentTime);
-  $: durationMS = secondsToMilliseconds(duration);
   $: articleLines = [
     `#easeframe${videoDocument.id}${$preferences && preferences.getAlternatingCase()}`,
     ...timesMS.map(timeMS => `#markTIME${timeMS}`),
@@ -40,11 +31,7 @@
 
 <section>
   <article>
-    <Video bind:currentTime bind:duration bind:paused bind:seek bind:togglePlayback src={videoFile.url} />
-    {#if durationMS > 0}
-      <Timeline bind:timesMS {currentTimeMS} {durationMS} {seek} />
-      <Nav bind:timesMS {currentTimeMS} {durationMS} {seek} {togglePlayback} {paused} />
-    {/if}
+    <VideoConsole bind:timesMS bind:seek {videoFile} />
   </article>
   <aside>
     <div>
@@ -95,10 +82,6 @@
 
   article {
     width: calc(100% - 2rem);
-  }
-
-  article > :global(*) {
-    width: 100%;
   }
 
   aside {

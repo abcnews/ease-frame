@@ -9,14 +9,14 @@
   import PreviousOutline24 from 'carbon-icons-svelte/lib/PreviousOutline24/PreviousOutline24.svelte';
   import TrashCan24 from 'carbon-icons-svelte/lib/TrashCan24/TrashCan24.svelte';
   import { formatMillisecondsAsSecondsAndMilliseconds, sortedNumericAscending } from '../../utils';
-  import type Video from '../Video/Video.svelte';
+  import type VideoConsole from '../VideoConsole/VideoConsole.svelte';
 
   export let currentTimeMS: number;
   export let durationMS: number;
   export let timesMS: number[];
-  export let seek: Video['seek'];
-  export let togglePlayback: Video['togglePlayback'];
   export let paused: HTMLVideoElement['paused'];
+  export let seek: VideoConsole['seek'];
+  export let togglePlayback: () => void | Promise<void>;
 
   $: isCurrentTimeMSMarked = timesMS.includes(currentTimeMS);
   $: keyTimesMS = [0, ...timesMS.filter(timeMS => timeMS !== 0), durationMS];
