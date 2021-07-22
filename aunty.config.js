@@ -1,7 +1,7 @@
+require('dotenv').config();
+
 const fs = require('fs');
 const path = require('path');
-const dotenv = require('dotenv').config();
-const { DefinePlugin } = require('webpack');
 
 const DEPLOY_TO = `/www/res/sites/news-projects/<name>/<id>`;
 const PUBLIC_PATH = path.join(__dirname, 'public');
@@ -42,12 +42,6 @@ module.exports = {
     }
   ],
   webpack: config => {
-    config.plugins.push(
-      new DefinePlugin({
-        'process.env': dotenv.parsed
-      })
-    );
-
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
       svelte: path.resolve('node_modules', 'svelte')
