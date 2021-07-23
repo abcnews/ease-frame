@@ -1,9 +1,11 @@
 <script lang="ts">
+  import size from '../../actions/size';
   import type { StillFrames, VideoDocument, VideoFile } from '../../constants';
   import { default as preferences } from '../../stores/preferences';
   import { getNextStillFrames, shouldStillFramesUpdate } from '../../utils';
   import Figure from '../Figure/Figure.svelte';
-  import PreferencesManager from '../Preferences/PreferencesManager.svelte';
+  import PreferencesManager, { PopoverPosition } from '../Preferences/PreferencesManager.svelte';
+
   import type VideoConsole from '../VideoConsole/VideoConsole.svelte';
   import Exporter from './Exporter.svelte';
 
@@ -13,6 +15,7 @@
   export let videoDocument: VideoDocument;
 
   let stillFrames: StillFrames = {};
+  let preferencesManagerPopoverPosition: PopoverPosition;
 
   $: articleLines = [
     `#easeframe${videoDocument.id}${$preferences && preferences.getAlternatingCase()}`,
@@ -21,13 +24,16 @@
   ];
   $: shouldStillFramesUpdate(videoFile, timesMS, stillFrames) &&
     getNextStillFrames(videoFile, timesMS, stillFrames).then(nextStillFrames => (stillFrames = nextStillFrames));
+
+  const onSize = ({ height }: DOMRect) =>
+    (preferencesManagerPopoverPosition = height < 200 ? PopoverPosition.TOP : PopoverPosition.BOTTOM);
 </script>
 
-<div>
+<div use:size={onSize}>
   <ul>
     <li>
       <pre>{articleLines[0].replace(/([A-Z]+)/g, '\n…$1')}</pre>
-      <PreferencesManager />
+      <PreferencesManager popoverPosition={preferencesManagerPopoverPosition} />
     </li>
     {#each Object.keys(stillFrames) as timeMS, index}
       <li>

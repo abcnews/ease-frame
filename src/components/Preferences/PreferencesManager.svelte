@@ -1,6 +1,11 @@
+<script context="module" lang="ts">
+  export enum PopoverPosition {
+    TOP = 'top',
+    BOTTOM = 'bottom'
+  }
+</script>
+
 <script lang="ts">
-  import Breakpoint from 'carbon-components-svelte/src/Breakpoint/Breakpoint.svelte';
-  import type { BreakpointSize } from 'carbon-components-svelte/types/Breakpoint/Breakpoint';
   import Button from 'carbon-components-svelte/src/Button/Button.svelte';
   import Popover from 'carbon-components-svelte/src/Popover/Popover.svelte';
   import RadioButton from 'carbon-components-svelte/src/RadioButton/RadioButton.svelte';
@@ -11,15 +16,11 @@
   import { default as preferences } from '../../stores/preferences';
   import { resolveHexColor } from '../../utils';
 
-  let size: BreakpointSize;
+  export let popoverPosition: PopoverPosition = PopoverPosition.TOP;
+
   let open: boolean;
   let color: string = get(preferences).background || '393939';
-
-  $: shouldPopoverOpenAboveButton = size === 'sm' || size === 'md';
-  $: console.log({ shouldPopoverOpenAboveButton });
 </script>
-
-<Breakpoint bind:size />
 
 <div>
   <Button
@@ -28,16 +29,10 @@
     kind="secondary"
     size="field"
     tooltipAlignment="end"
-    tooltipPosition={shouldPopoverOpenAboveButton ? 'top' : 'bottom'}
+    tooltipPosition={popoverPosition}
     on:click={() => (open = !open)}
   />
-  <Popover
-    bind:open
-    align={shouldPopoverOpenAboveButton ? 'top-right' : 'bottom-right'}
-    closeOnOutsideClick
-    light
-    relative
-  >
+  <Popover bind:open align={`${popoverPosition}-right`} closeOnOutsideClick light relative>
     <menu on:contextmenu|preventDefault={preferences.reset}>
       <li>
         <RadioButtonGroup
