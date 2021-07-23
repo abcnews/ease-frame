@@ -31,9 +31,9 @@
 	"dependencies": {
 		"@abcnews/terminus-fetch": "^4.0.1",
 		"@abcnews/url2cmid": "^1.1.0",
-		"carbon-components": "^10.38.0",
-		"carbon-components-svelte": "^0.38.1",
-		"carbon-icons-svelte": "^10.35.0",
+		"carbon-components": "^10.40.0",
+		"carbon-components-svelte": "^0.41.0",
+		"carbon-icons-svelte": "^10.36.0",
 		"file-saver": "^2.0.5",
 		"jszip": "^3.6.0",
 		"svelte": "^3.40.0",
