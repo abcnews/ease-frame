@@ -1,10 +1,3 @@
-<script context="module" lang="ts">
-  export enum PopoverPosition {
-    TOP = 'top',
-    BOTTOM = 'bottom'
-  }
-</script>
-
 <script lang="ts">
   import Button from 'carbon-components-svelte/src/Button/Button.svelte';
   import Popover from 'carbon-components-svelte/src/Popover/Popover.svelte';
@@ -15,6 +8,7 @@
   import { get } from 'svelte/store';
   import { default as preferences } from '../../stores/preferences';
   import { resolveHexColor } from '../../utils';
+  import { PopoverPosition } from './constants';
 
   export let popoverPosition: PopoverPosition = PopoverPosition.TOP;
 

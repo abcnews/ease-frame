@@ -4,7 +4,8 @@
   import { default as preferences } from '../../stores/preferences';
   import { getNextStillFrames, shouldStillFramesUpdate } from '../../utils';
   import Figure from '../Figure/Figure.svelte';
-  import PreferencesManager, { PopoverPosition } from '../Preferences/PreferencesManager.svelte';
+  import { PopoverPosition } from '../Preferences/constants';
+  import PreferencesManager from '../Preferences/PreferencesManager.svelte';
 
   import type VideoConsole from '../VideoConsole/VideoConsole.svelte';
   import Exporter from './Exporter.svelte';
