@@ -12,7 +12,8 @@ if (target) {
         videoReference: searchParams.get('v'),
         timesMS: (searchParams.get('t') || '').split('-').map(x => +x),
         background: searchParams.get('b'),
-        inset: searchParams.get('i')
+        inset: searchParams.get('i'),
+        orientation: searchParams.get('o')
       } as ImportedProject)
     : undefined;
 

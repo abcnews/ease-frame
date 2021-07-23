@@ -4,6 +4,7 @@
   import RadioButton from 'carbon-components-svelte/src/RadioButton/RadioButton.svelte';
   import RadioButtonGroup from 'carbon-components-svelte/src/RadioButtonGroup/RadioButtonGroup.svelte';
   import Toggle from 'carbon-components-svelte/src/Toggle/Toggle.svelte';
+  import Close24 from 'carbon-icons-svelte/lib/Close24/Close24.svelte';
   import Settings24 from 'carbon-icons-svelte/lib/Settings24/Settings24.svelte';
   import { get } from 'svelte/store';
   import { default as preferences } from '../../stores/preferences';
@@ -18,7 +19,7 @@
 
 <div>
   <Button
-    icon={Settings24}
+    icon={open ? Close24 : Settings24}
     iconDescription={`Change preferences`}
     kind="secondary"
     size="field"
@@ -63,6 +64,17 @@
           }}
           disabled={$preferences.background === null}
         />
+      </li>
+      <li>
+        <RadioButtonGroup
+          legendText="Preferred stills orientation"
+          orientation="vertical"
+          selected={$preferences.orientation}
+          on:change={({ detail }) => preferences.setOrientation(detail)}
+        >
+          <RadioButton labelText="Landscape" value="landscape" />
+          <RadioButton labelText="Portrait" value="portrait" />
+        </RadioButtonGroup>
       </li>
     </menu>
   </Popover>

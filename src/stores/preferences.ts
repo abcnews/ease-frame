@@ -3,15 +3,18 @@ import { ImportedProject } from '../constants';
 
 export type BackgroundPreference = string | null;
 export type InsetPreference = 'left' | 'center' | 'right' | null;
+export type OrientationPreference = 'portrait' | 'landscape';
 
 export type Preferences = {
   background: BackgroundPreference;
   inset: InsetPreference;
+  orientation: OrientationPreference;
 };
 
 export const DEFAULTS: Preferences = {
   inset: null,
-  background: null
+  background: null,
+  orientation: 'portrait'
 };
 
 const createPreferencesStore = () => {
@@ -21,13 +24,21 @@ const createPreferencesStore = () => {
   const { set, subscribe, update } = store;
 
   return {
-    getAlternatingCase() {
+    getConfigAsAlternatingCase() {
       const { background, inset } = get(store);
 
       return `${inset ? `INSET${inset}` : ''}${background ? `BACKGROUND${background.replace('#', '')}` : ''}`;
     },
     import(importedProject: ImportedProject) {
-      update(state => ({ ...state, background: importedProject.background, inset: importedProject.inset }));
+      set(
+        Object.keys(DEFAULTS).reduce(
+          (memo, key) => ({
+            ...memo,
+            [key]: importedProject[key] || DEFAULTS[key]
+          }),
+          {} as Preferences
+        )
+      );
     },
     reset() {
       set(DEFAULTS);
@@ -37,6 +48,9 @@ const createPreferencesStore = () => {
     },
     setInset(value: InsetPreference) {
       update(state => ({ ...state, inset: value }));
+    },
+    setOrientation(value: OrientationPreference) {
+      update(state => ({ ...state, orientation: value }));
     },
     subscribe
   };

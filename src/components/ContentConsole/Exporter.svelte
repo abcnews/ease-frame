@@ -18,7 +18,8 @@
       v: videoDocument.id,
       t: Object.keys(stillFrames).join('-'),
       b: $preferences.background,
-      i: $preferences.inset
+      i: $preferences.inset,
+      o: $preferences.orientation
     })
   ).toString()}`;
 
@@ -32,7 +33,7 @@
 
     // Images
     timesMS.forEach(timeMS => {
-      zip.file(`${name}-image-${String(timeMS).padStart(numDurationMSChars, '0')}.png`, stillFrames[timeMS]);
+      zip.file(`${name}-image-${String(timeMS).padStart(numDurationMSChars, '0')}.jpg`, stillFrames[timeMS]);
     });
 
     // Text

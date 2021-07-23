@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { beforeUpdate, onMount, tick } from 'svelte';
   import { isTouchEvent, secondsToMilliseconds, millisecondsToSeconds } from '../../utils';
   import type { VideoFile } from '../../constants';
   import Figure from '../Figure/Figure.svelte';
@@ -10,9 +10,9 @@
   export let videoFile: VideoFile;
 
   let videoEl: HTMLVideoElement;
-  let currentTime: HTMLVideoElement['currentTime'] = 0;
-  let duration: HTMLVideoElement['duration'] = 0;
-  let paused: HTMLVideoElement['paused'] = true;
+  let currentTime: HTMLVideoElement['currentTime'];
+  let duration: HTMLVideoElement['duration'];
+  let paused: HTMLVideoElement['paused'];
   let isAcceptingPointerMovement: boolean = false;
 
   export const seek = (timeMS: number, shouldPlaybackContinue: boolean = false) => {
@@ -23,8 +23,13 @@
     currentTime = millisecondsToSeconds(timeMS);
   };
 
-  $: currentTimeMS = secondsToMilliseconds(currentTime);
-  $: durationMS = secondsToMilliseconds(duration);
+  $: currentTimeMS = secondsToMilliseconds(currentTime || 0);
+  $: durationMS = secondsToMilliseconds(duration || 0);
+
+  $: if (durationMS > 0 && timesMS.some(timeMS => timeMS > durationMS)) {
+    timesMS = timesMS.filter(timeMS => timeMS <= durationMS);
+    console.debug('Removed marks that occur beyond video duration');
+  }
 
   const pauseIfPlaying = () => !paused && videoEl.pause();
   const togglePlayback = () => videoEl[paused ? 'play' : 'pause']();
@@ -62,13 +67,22 @@
   };
 
   onMount(() => {
-    videoEl.load();
-
     ['disablePictureInPicture', 'disableRemotePlayback'].forEach(experimentalProp => {
       if (experimentalProp in videoEl) {
         videoEl[experimentalProp] = true;
       }
     });
+  });
+
+  let lastVideoFile: VideoFile;
+
+  beforeUpdate(async () => {
+    if (lastVideoFile !== videoFile) {
+      paused = true;
+      lastVideoFile = videoFile;
+      await tick();
+      videoEl.load();
+    }
   });
 </script>
 
@@ -85,9 +99,9 @@
       preload="auto"
       src={videoFile.url}
       on:mousedown={handleVideoPointerDown}
-      on:touchstart={handleVideoPointerDown}
+      on:touchstart|passive={handleVideoPointerDown}
       on:mousemove={handleVideoPointerMove}
-      on:touchmove={handleVideoPointerMove}
+      on:touchmove|passive={handleVideoPointerMove}
     />
   </Figure>
   {#if durationMS > 0}

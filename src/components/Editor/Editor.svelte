@@ -1,31 +1,33 @@
 <script lang="ts">
   import type { ImportedProject, VideoDocument } from '../../constants';
+  import preferences from '../../stores/preferences';
   import { getVideoFile } from '../../utils';
   import ContentConsole from '../ContentConsole/ContentConsole.svelte';
   import VideoConsole from '../VideoConsole/VideoConsole.svelte';
 
   export let importedProject: ImportedProject | undefined;
   export let videoDocument: VideoDocument;
-  export let isPortraitPreferred: boolean = false;
-
-  const videoFile = getVideoFile(videoDocument, isPortraitPreferred);
-
-  if (!videoFile) {
-    throw new Error('Video document has no files');
-  }
 
   let seek: VideoConsole['seek'];
   let timesMS: number[] = (importedProject && importedProject.timesMS) || [];
+
+  $: videoFile = getVideoFile(videoDocument, $preferences.orientation);
 </script>
 
-<section>
-  <article>
-    <VideoConsole bind:timesMS bind:seek {videoFile} />
-  </article>
-  <aside>
-    <ContentConsole bind:timesMS bind:seek {videoDocument} {videoFile} />
-  </aside>
-</section>
+{#if videoFile}
+  <section>
+    <article>
+      <VideoConsole bind:timesMS bind:seek {videoFile} />
+    </article>
+    <aside>
+      <ContentConsole bind:timesMS bind:seek {videoDocument} {videoFile} />
+    </aside>
+  </section>
+{:else}
+  <section>
+    <p>Video document has no files</p>
+  </section>
+{/if}
 
 <style>
   section {

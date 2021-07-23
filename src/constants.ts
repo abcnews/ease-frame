@@ -34,3 +34,7 @@ export type VideoDocument = {
 export interface StillFrames {
   [key: number]: Blob;
 }
+
+export interface StillFramesObjectURLs {
+  [key: number]: string;
+}

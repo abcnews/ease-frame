@@ -1,4 +1,5 @@
 import type { StillFrames, VideoDocument, VideoFile } from './constants';
+import type { OrientationPreference } from './stores/preferences';
 
 export const millisecondsToSeconds = (milliseconds: number) => milliseconds / 1000;
 
@@ -53,9 +54,14 @@ const isFileAsTallAsOrTallerThanWide = (file: VideoFile) => file.height >= file.
 const isFileWiderThanTall = (file: VideoFile) => file.width > file.height;
 const comparatorSizeDescending = (a: VideoFile, b: VideoFile) => b.size - a.size;
 
-export const getVideoFile = (videoDocument: VideoDocument, isPortraitPreferred: boolean): VideoFile | undefined => {
+export const getVideoFile = (
+  videoDocument: VideoDocument,
+  preferredOrientation: OrientationPreference
+): VideoFile | undefined => {
   const files = videoDocument.media.video.renditions.files;
-  const preferredFiles = files.filter(isPortraitPreferred ? isFileAsTallAsOrTallerThanWide : isFileWiderThanTall);
+  const preferredFiles = files.filter(
+    preferredOrientation === 'portrait' ? isFileAsTallAsOrTallerThanWide : isFileWiderThanTall
+  );
 
   return (preferredFiles.length > 0 ? preferredFiles : files).sort(comparatorSizeDescending)[0];
 };
@@ -83,27 +89,30 @@ export const getNextStillFrames = async (
     throw new Error('No canvas context to work with');
   }
 
-  const { width, height } = videoFile;
+  const { width, height, url } = videoFile;
+  const hasVideoFileChanged = stillFramesVideoEl.src !== url;
   const nextStillFrames: StillFrames = {
     ...currentStillFrames
   };
 
-  stillFramesCanvasEl.width = width;
-  stillFramesCanvasEl.height = height;
-  stillFramesVideoEl.src = videoFile.url;
-  await stillFramesVideoEl.play();
-  await oneShotEvent(stillFramesVideoEl, 'canplaythrough');
-  stillFramesVideoEl.pause();
+  if (hasVideoFileChanged) {
+    stillFramesCanvasEl.width = width;
+    stillFramesCanvasEl.height = height;
+    stillFramesVideoEl.src = videoFile.url;
+    await stillFramesVideoEl.play();
+    await oneShotEvent(stillFramesVideoEl, 'canplaythrough');
+    stillFramesVideoEl.pause();
+  }
 
   for (let timeMS of timesMS) {
-    if (!nextStillFrames[timeMS]) {
+    if (hasVideoFileChanged || !nextStillFrames[timeMS]) {
       stillFramesVideoEl.currentTime = millisecondsToSeconds(timeMS);
       await oneShotEvent(stillFramesVideoEl, 'seeked');
       stillFramesCanvasContext.clearRect(0, 0, width, height);
       stillFramesCanvasContext.drawImage(stillFramesVideoEl, 0, 0, width, height, 0, 0, width, height);
 
       const blob = await new Promise<Blob | null>(resolve =>
-        stillFramesCanvasEl.toBlob(blob => resolve(blob), 'image/png')
+        stillFramesCanvasEl.toBlob(blob => resolve(blob), 'image/jpeg', 0.5)
       );
 
       if (blob !== null) {

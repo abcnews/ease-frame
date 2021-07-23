@@ -3,11 +3,13 @@
   import { default as preferences } from '../../stores/preferences';
   import { resolveHexColor } from '../../utils';
 
+  export let ratio: '2x1' | '16x9' | '4x3' | '1x1' | '3x4' | '3x2' | '9x16' | '1x2' = '4x3';
+
   $: figureStyles = $preferences.background ? `background: ${resolveHexColor($preferences.background)};` : undefined;
 </script>
 
 <figure style={figureStyles}>
-  <AspectRatio ratio="4x3">
+  <AspectRatio {ratio}>
     <slot />
   </AspectRatio>
 </figure>

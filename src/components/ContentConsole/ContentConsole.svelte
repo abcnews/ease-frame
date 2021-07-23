@@ -1,6 +1,7 @@
 <script lang="ts">
+  import { fade } from 'svelte/transition';
   import size from '../../actions/size';
-  import type { StillFrames, VideoDocument, VideoFile } from '../../constants';
+  import type { StillFrames, StillFramesObjectURLs, VideoDocument, VideoFile } from '../../constants';
   import { default as preferences } from '../../stores/preferences';
   import { getNextStillFrames, shouldStillFramesUpdate } from '../../utils';
   import Figure from '../Figure/Figure.svelte';
@@ -16,15 +17,25 @@
   export let videoDocument: VideoDocument;
 
   let stillFrames: StillFrames = {};
+  let stillFramesObjectURLs: StillFramesObjectURLs = {};
   let preferencesManagerPopoverPosition: PopoverPosition;
 
   $: articleLines = [
-    `#easeframe${videoDocument.id}${$preferences && preferences.getAlternatingCase()}`,
+    `#easeframe${videoDocument.id}${$preferences && preferences.getConfigAsAlternatingCase()}`,
     ...timesMS.map(timeMS => `#markTIME${timeMS}`),
     `#endeaseframe`
   ];
   $: shouldStillFramesUpdate(videoFile, timesMS, stillFrames) &&
-    getNextStillFrames(videoFile, timesMS, stillFrames).then(nextStillFrames => (stillFrames = nextStillFrames));
+    getNextStillFrames(videoFile, timesMS, stillFrames).then(nextStillFrames => {
+      stillFrames = nextStillFrames;
+      stillFramesObjectURLs = Object.keys(nextStillFrames).reduce(
+        (memo, key) => ({
+          ...memo,
+          [key]: URL.createObjectURL(stillFrames[key])
+        }),
+        {}
+      );
+    });
 
   const onSize = ({ height }: DOMRect) =>
     (preferencesManagerPopoverPosition = height < 200 ? PopoverPosition.TOP : PopoverPosition.BOTTOM);
@@ -36,15 +47,18 @@
       <pre>{articleLines[0].replace(/([A-Z]+)/g, '\n…$1')}</pre>
       <PreferencesManager popoverPosition={preferencesManagerPopoverPosition} />
     </li>
-    {#each Object.keys(stillFrames) as timeMS, index}
-      <li>
+    {#each timesMS as timeMS, index}
+      <li on:click={() => seek(+timeMS)}>
         <pre>{articleLines[index + 1]}</pre>
-        <Figure>
-          <img
-            src={URL.createObjectURL(stillFrames[timeMS])}
-            alt={`A still image of the video at ${timeMS}ms`}
-            on:click={() => seek(+timeMS)}
-          />
+        <Figure ratio="1x1">
+          {#if timeMS in stillFramesObjectURLs}
+            <img
+              src={stillFramesObjectURLs[timeMS]}
+              alt={`A still image of the video at ${timeMS}ms`}
+              in:fade
+              out:fade
+            />
+          {/if}
         </Figure>
       </li>
     {/each}
@@ -84,6 +98,14 @@
     border-top: 1px solid #c6c6c6;
   }
 
+  li:not(:first-child):not(:last-child) {
+    cursor: pointer;
+  }
+
+  li:not(:first-child):not(:last-child):hover {
+    background-color: #e0e0e0;
+  }
+
   li > :global(*) {
     position: relative;
   }
@@ -99,8 +121,7 @@
 
   li :global(figure) {
     margin: 0;
-    width: 5.334rem;
-    cursor: pointer;
+    width: 4rem;
   }
 
   footer {

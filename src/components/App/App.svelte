@@ -3,12 +3,12 @@
   import url2cmid from '@abcnews/url2cmid';
   import Button from 'carbon-components-svelte/src/Button/Button.svelte';
   import Form from 'carbon-components-svelte/src/Form/Form.svelte';
-  import RadioButton from 'carbon-components-svelte/src/RadioButton/RadioButton.svelte';
-  import RadioButtonGroup from 'carbon-components-svelte/src/RadioButtonGroup/RadioButtonGroup.svelte';
   import TextInput from 'carbon-components-svelte/src/TextInput/TextInput.svelte';
   import DocumentVideo24 from 'carbon-icons-svelte/lib/DocumentVideo24/DocumentVideo24.svelte';
+  import { get } from 'svelte/store';
   import type { ImportedProject, VideoDocument } from '../../constants';
   import { default as preferences } from '../../stores/preferences';
+  import { getVideoFile } from '../../utils';
   import Editor from '../Editor/Editor.svelte';
 
   export let importedProject: ImportedProject | undefined;
@@ -16,7 +16,6 @@
   let videoReference: string = importedProject
     ? importedProject.videoReference
     : process.env.EASE_FRAME_DEBUG_VIDEO_REFERENCE || '';
-  let preferredVideoOrientation: 'landscape' | 'portrait' = 'landscape';
   let videoDocument: VideoDocument | null = null;
   let isFetching: boolean = false;
   let errorMessage: string | null = null;
@@ -51,6 +50,15 @@
           return fail(`Core Media document isn't a Video`);
         }
 
+        if (
+          !getVideoFile(
+            terminusDocument,
+            (importedProject && importedProject.orientation) || get(preferences).orientation
+          )
+        ) {
+          return fail(`Video has no associated files`);
+        }
+
         videoDocument = terminusDocument;
 
         if (importedProject) {
@@ -68,7 +76,7 @@
 </script>
 
 {#if videoDocument}
-  <Editor {importedProject} {videoDocument} isPortraitPreferred={preferredVideoOrientation === 'portrait'} />
+  <Editor {importedProject} {videoDocument} />
 {:else}
   <section>
     <Form on:submit={loadVideoDocument}>
@@ -81,10 +89,6 @@
         on:keydown={clearError}
         on:focus={clearError}
       />
-      <RadioButtonGroup legendText="Preferred video orientation" bind:selected={preferredVideoOrientation}>
-        <RadioButton labelText="Landscape" value="landscape" />
-        <RadioButton labelText="Portrait" value="portrait" />
-      </RadioButtonGroup>
       <Button type="submit" disabled={isFetching} icon={DocumentVideo24} size="field"
         >{`${importedProject ? 'Import' : 'Create'} project`}</Button
       >
@@ -109,34 +113,7 @@
     max-width: none;
   }
 
-  @media (min-width: 32rem) {
-    section :global(form) {
-      display: flex;
-    }
-  }
-
-  section :global(form) :global(fieldset) {
-    margin-top: 1rem;
-  }
-
   section :global(form) > :global(button) {
     margin-top: 1rem;
-  }
-
-  @media (min-width: 32rem) {
-    section :global(form) {
-      display: flex;
-    }
-
-    section :global(form) > :global(:nth-child(2)) {
-      margin-right: 1rem;
-      width: auto;
-      flex-shrink: 1;
-    }
-
-    section :global(form) > :global(button) {
-      margin-top: 1.825rem;
-      width: 15.5rem;
-    }
   }
 </style>
