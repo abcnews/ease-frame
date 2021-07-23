@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Breakpoint from 'carbon-components-svelte/src/Breakpoint/Breakpoint.svelte';
+  import type { BreakpointSize } from 'carbon-components-svelte/types/Breakpoint/Breakpoint';
   import Button from 'carbon-components-svelte/src/Button/Button.svelte';
   import Popover from 'carbon-components-svelte/src/Popover/Popover.svelte';
   import RadioButton from 'carbon-components-svelte/src/RadioButton/RadioButton.svelte';
@@ -9,14 +11,15 @@
   import { default as preferences } from '../../stores/preferences';
   import { resolveHexColor } from '../../utils';
 
-  let windowInnerWidth: number;
+  let size: BreakpointSize;
   let open: boolean;
-  let color: string = get(preferences).background || '666666';
+  let color: string = get(preferences).background || '393939';
 
-  $: shouldPopoverOpenAboveButton = windowInnerWidth <= 960;
+  $: shouldPopoverOpenAboveButton = size === 'sm' || size === 'md';
+  $: console.log({ shouldPopoverOpenAboveButton });
 </script>
 
-<svelte:window bind:innerWidth={windowInnerWidth} />
+<Breakpoint bind:size />
 
 <div>
   <Button
@@ -50,6 +53,16 @@
         </RadioButtonGroup>
       </li>
       <li>
+        <Toggle
+          toggled={$preferences.background !== null}
+          on:toggle={event => {
+            const { toggled } = event.detail;
+
+            preferences.setBackground(toggled ? color : null);
+          }}
+          labelText="Inset video background colour"
+          size="sm"
+        />
         <input
           type="color"
           value={resolveHexColor(color)}
@@ -61,16 +74,6 @@
           }}
           disabled={$preferences.background === null}
         />
-        <Toggle
-          toggled={$preferences.background !== null}
-          on:toggle={event => {
-            const { toggled } = event.detail;
-
-            preferences.setBackground(toggled ? color : null);
-          }}
-          labelText="Inset video background colour"
-          size="sm"
-        />
       </li>
     </menu>
   </Popover>
@@ -80,7 +83,6 @@
   menu {
     margin: 0;
     padding: 0.75rem 0.75rem 1rem;
-    width: 15rem;
   }
 
   li {
@@ -92,9 +94,10 @@
   }
 
   input[type='color'] {
-    transform: translate(0, 1.625rem);
+    transform: translate(0, -85%);
     position: absolute;
-    left: 6rem;
+    right: 0.75rem;
+    width: calc(100% - 6rem);
   }
 
   input[type='color'][disabled] {
