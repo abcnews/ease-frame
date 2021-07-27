@@ -1,42 +1,52 @@
 {
-	"name": "ease-frame",
-	"version": "1.9.0",
-	"description": "A project generated from aunty's svelte project template.",
-	"license": "MIT",
-	"private": true,
-	"contributors": [
-		"Colin Gourlay <gourlay.colin@abc.net.au>"
-	],
-	"scripts": {
-		"start": "aunty serve",
-		"test": "aunty test"
-	},
-	"abc": {
-		"css": {
-			"libraryDir": "./node_modules/@abcaustralia/nucleus/css",
-			"logVariables": "false"
-		}
-	},
-	"browserslist": [
-		"> 1.5%"
-	],
-	"devDependencies": {
-		"@abcnews/aunty": "^12.0.3",
-		"@testing-library/svelte": "^3.0.3",
-		"@types/file-saver": "^2.0.2",
-		"@types/jest": "^26.0.23",
-		"@types/webpack-env": "^1.16.0",
-		"dotenv-defaults": "^2.0.2"
-	},
-	"dependencies": {
-		"@abcnews/terminus-fetch": "^4.0.1",
-		"@abcnews/url2cmid": "^1.1.0",
-		"carbon-components": "^10.40.0",
-		"carbon-components-svelte": "^0.41.0",
-		"carbon-icons-svelte": "^10.36.0",
-		"file-saver": "^2.0.5",
-		"jszip": "^3.6.0",
-		"svelte": "^3.40.0",
-		"svelte-range-slider-pips": "^1.7.2"
-	}
+  "name": "ease-frame",
+  "version": "1.9.0",
+  "description": "A project generated from aunty's svelte project template.",
+  "license": "MIT",
+  "private": true,
+  "contributors": [
+    "Colin Gourlay <gourlay.colin@abc.net.au>"
+  ],
+  "scripts": {
+    "start": "aunty serve"
+  },
+  "abc": {
+    "css": {
+      "libraryDir": "./node_modules/@abcaustralia/nucleus/css",
+      "logVariables": "false"
+    }
+  },
+  "browserslist": [
+    "> 1.5%"
+  ],
+  "devDependencies": {
+    "@abcnews/aunty": "^12.0.3",
+    "@testing-library/svelte": "^3.0.3",
+    "@types/file-saver": "^2.0.2",
+    "@types/jest": "^26.0.23",
+    "@types/webpack-env": "^1.16.0",
+    "dotenv-defaults": "^2.0.2"
+  },
+  "dependencies": {
+    "@abcnews/terminus-fetch": "^4.0.1",
+    "@abcnews/url2cmid": "^1.1.0",
+    "assert": "^2.0.0",
+    "base-x": "^3.0.8",
+    "buffer": "^5.7.1",
+    "carbon-components": "^10.40.0",
+    "carbon-components-svelte": "^0.41.0",
+    "carbon-icons-svelte": "^10.36.0",
+    "console-browserify": "^1.2.0",
+    "file-saver": "^2.0.5",
+    "https-browserify": "^1.0.0",
+    "jszip": "^3.6.0",
+    "process": "^0.11.10",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "svelte": "^3.40.0",
+    "svelte-range-slider-pips": "^1.7.2",
+    "timers-browserify": "^2.0.12",
+    "util": "^0.12.4",
+    "ytdl-core": "^4.9.0"
+  }
 }

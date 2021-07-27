@@ -1,18 +1,30 @@
+import type { Options } from 'miniget';
 import type { Preferences } from './stores/preferences';
 
+export type VideoReference = string;
+
 export interface ImportedProject extends Preferences {
-  videoReference: string;
+  videoReference: VideoReference;
   timesMS: number[];
 }
 
+export enum VideoLibrary {
+  TERMINUS = 'terminus',
+  YOUTUBE = 'youtube'
+}
+
+export type VideoLocation = {
+  id: string;
+  library: VideoLibrary;
+};
+
 export interface VideoFile {
-  size: number;
   width: number;
   height: number;
   url: string;
 }
 
-export type VideoDocument = {
+export type TerminusVideoDocument = {
   id: string;
   docType: string;
   media: {
@@ -31,6 +43,15 @@ export type VideoDocument = {
   };
 };
 
+export type YouTubeVideoDocument = {
+  formats: VideoFile[];
+};
+
+export type VideoDocument = {
+  _library: VideoLibrary;
+  _reference: VideoReference;
+} & (TerminusVideoDocument | YouTubeVideoDocument);
+
 export interface StillFrames {
   [key: number]: Blob;
 }
@@ -38,3 +59,16 @@ export interface StillFrames {
 export interface StillFramesObjectURLs {
   [key: number]: string;
 }
+
+export const PROXY_HOSTNAME = 'abcnews-cors-anywhere.herokuapp.com';
+export const YOUTUBE_WATCH_URL_PREFIX = 'https://www.youtube.com/watch?v=';
+export const YTDL_OPTIONS = {
+  requestOptions: {
+    transform: parsedUrl => {
+      parsedUrl.path = `/${parsedUrl.protocol}//${parsedUrl.host}${parsedUrl.path}`;
+      parsedUrl.host = parsedUrl.hostname = PROXY_HOSTNAME;
+
+      return parsedUrl;
+    }
+  } as Options
+};

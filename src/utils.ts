@@ -1,4 +1,9 @@
-import type { StillFrames, VideoDocument, VideoFile } from './constants';
+import url2cmid from '@abcnews/url2cmid';
+import baseX from 'base-x';
+import { Buffer } from 'buffer/';
+import { chooseFormat, getVideoID, videoFormat } from 'ytdl-core';
+import { TerminusVideoDocument, VideoLibrary, YouTubeVideoDocument, PROXY_HOSTNAME } from './constants';
+import type { StillFrames, VideoDocument, VideoLocation, VideoFile } from './constants';
 import type { OrientationPreference } from './stores/preferences';
 
 export const millisecondsToSeconds = (milliseconds: number) => milliseconds / 1000;
@@ -52,13 +57,30 @@ export const oneShotEvent = <T extends EventTarget>(target: T, name: string) => 
 
 const isFileAsTallAsOrTallerThanWide = (file: VideoFile) => file.height >= file.width;
 const isFileWiderThanTall = (file: VideoFile) => file.width > file.height;
-const comparatorSizeDescending = (a: VideoFile, b: VideoFile) => b.size - a.size;
+const comparatorSizeDescending = (a: VideoFile, b: VideoFile) => b.width * b.height - a.width * a.height;
 
 export const getVideoFile = (
   videoDocument: VideoDocument,
   preferredOrientation: OrientationPreference
 ): VideoFile | undefined => {
-  const files = videoDocument.media.video.renditions.files;
+  let files: VideoFile[];
+
+  switch (videoDocument._library) {
+    case VideoLibrary.TERMINUS:
+      files = (videoDocument as TerminusVideoDocument).media.video.renditions.files;
+      break;
+    case VideoLibrary.YOUTUBE:
+      files = [
+        chooseFormat((videoDocument as YouTubeVideoDocument).formats as videoFormat[], {
+          filter: 'videoonly',
+          quality: 'highestvideo'
+        }) as VideoFile
+      ].map(file => ({ ...file, url: `https://${PROXY_HOSTNAME}/${file.url}` }));
+      break;
+    default:
+      throw new Error('No library');
+  }
+
   const preferredFiles = files.filter(
     preferredOrientation === 'portrait' ? isFileAsTallAsOrTallerThanWide : isFileWiderThanTall
   );
@@ -128,4 +150,37 @@ export const getNextStillFrames = async (
   });
 
   return nextStillFrames;
+};
+
+export const isNumericString = (value: string) => value.length > 0 && String(parseInt(value, 10)) === value;
+
+const BASE_36_CHARSET = '0123456789abcdefghijklmnopqrstuvwxyz';
+
+const base36 = baseX(BASE_36_CHARSET);
+
+export const encodeYouTubeID = (id: string) => `y${base36.encode(Buffer.from(new TextEncoder().encode(id)))}`;
+
+export const decodeYouTubeID = (encoded: string) => base36.decode(encoded.slice(1)).toString();
+
+export const getVideoLocation = (clue: string): VideoLocation | null => {
+  // Try to match a Terminus ID
+  // e.g. 13470928
+  // e.g. https://www.abc.net.au/news/2021-07-26/ariarne-arnie-titmus-wins-gold-against-rival-katie/13470928
+
+  const potentialTerminusID = url2cmid(clue) || clue;
+
+  if (isNumericString(potentialTerminusID)) {
+    return { id: potentialTerminusID, library: VideoLibrary.TERMINUS };
+  }
+
+  // Try to match a YouTube ID
+  // e.g. UkAaG8VYZpA
+  // e.g. https://www.youtube.com/watch?v=UkAaG8VYZpA
+  const potentialYouTubeID = clue.indexOf('y') === 0 ? decodeYouTubeID(clue) : clue;
+
+  try {
+    return { id: getVideoID(potentialYouTubeID), library: VideoLibrary.YOUTUBE };
+  } catch (err) {}
+
+  return null;
 };

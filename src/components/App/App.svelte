@@ -1,29 +1,34 @@
 <script lang="ts">
   import { fetchOne } from '@abcnews/terminus-fetch';
-  import url2cmid from '@abcnews/url2cmid';
   import Button from 'carbon-components-svelte/src/Button/Button.svelte';
   import Form from 'carbon-components-svelte/src/Form/Form.svelte';
   import TextInput from 'carbon-components-svelte/src/TextInput/TextInput.svelte';
   import DocumentVideo24 from 'carbon-icons-svelte/lib/DocumentVideo24/DocumentVideo24.svelte';
   import { get } from 'svelte/store';
+  import { getInfo } from 'ytdl-core';
+  import {
+    TerminusVideoDocument,
+    VideoLibrary,
+    YouTubeVideoDocument,
+    YOUTUBE_WATCH_URL_PREFIX,
+    YTDL_OPTIONS
+  } from '../../constants';
   import type { ImportedProject, VideoDocument } from '../../constants';
   import { default as preferences } from '../../stores/preferences';
-  import { getVideoFile } from '../../utils';
+  import { encodeYouTubeID, getVideoFile, getVideoLocation } from '../../utils';
   import Editor from '../Editor/Editor.svelte';
 
   export let importedProject: ImportedProject | undefined;
 
-  let videoReference: string = importedProject
+  let clue: string = importedProject
     ? importedProject.videoReference
     : process.env.EASE_FRAME_DEBUG_VIDEO_REFERENCE || '';
   let videoDocument: VideoDocument | null = null;
   let isFetching: boolean = false;
   let errorMessage: string | null = null;
 
-  const isVideoDocument = (terminusDocument: {}): terminusDocument is VideoDocument =>
+  const isVideoDocument = (terminusDocument: {}): terminusDocument is TerminusVideoDocument =>
     'docType' in terminusDocument && terminusDocument['docType'] === 'Video';
-
-  const isNumericString = (value: string) => String(parseInt(value, 10)) === value;
 
   const fail = (reason: string) => {
     errorMessage = `${importedProject ? `Import failed. ` : ''}${reason}`;
@@ -33,43 +38,76 @@
     }
   };
 
-  const loadVideoDocument = () => {
-    const id = isNumericString(videoReference) ? videoReference : url2cmid(videoReference);
+  const loadVideoConfig = () => {
+    const videoLocation = getVideoLocation(clue);
 
-    if (!id) {
-      return fail(`Couldn't parse a Core Media document ID`);
+    if (!videoLocation) {
+      return fail(`Couldn't locate video based on information provided`);
     }
 
     isFetching = true;
 
-    fetchOne({ id, type: 'video' })
-      .then(terminusDocument => {
-        isFetching = false;
+    switch (videoLocation.library) {
+      case VideoLibrary.TERMINUS:
+        fetchOne({ id: videoLocation.id, type: 'video' })
+          .then(terminusDocument => {
+            isFetching = false;
 
-        if (!isVideoDocument(terminusDocument)) {
-          return fail(`Core Media document isn't a Video`);
-        }
+            if (!isVideoDocument(terminusDocument)) {
+              return fail(`Core Media document isn't a Video`);
+            }
 
-        if (
-          !getVideoFile(
-            terminusDocument,
-            (importedProject && importedProject.orientation) || get(preferences).orientation
-          )
-        ) {
-          return fail(`Video has no associated files`);
-        }
+            const _videoDocument = {
+              ...terminusDocument,
+              _library: VideoLibrary.TERMINUS,
+              _reference: terminusDocument.id
+            };
 
-        videoDocument = terminusDocument;
+            if (
+              !getVideoFile(
+                _videoDocument,
+                (importedProject && importedProject.orientation) || get(preferences).orientation
+              )
+            ) {
+              return fail(`Video has no associated files`);
+            }
 
-        if (importedProject) {
-          preferences.import(importedProject);
-        }
-      })
-      .catch(_error => {
-        isFetching = false;
+            videoDocument = _videoDocument;
 
-        return fail(`Couldn't fetch Core Media document`);
-      });
+            if (importedProject) {
+              preferences.import(importedProject);
+            }
+          })
+          .catch(_error => {
+            isFetching = false;
+
+            return fail(`Couldn't fetch Terminus video document`);
+          });
+        break;
+      case VideoLibrary.YOUTUBE:
+        getInfo(`${YOUTUBE_WATCH_URL_PREFIX}${videoLocation.id}`, YTDL_OPTIONS)
+          .then(videoInfo => {
+            isFetching = false;
+
+            videoDocument = {
+              ...(videoInfo as YouTubeVideoDocument),
+              _library: VideoLibrary.YOUTUBE,
+              _reference: encodeYouTubeID(videoInfo.videoDetails.videoId)
+            };
+
+            if (importedProject) {
+              preferences.import(importedProject);
+            }
+          })
+          .catch(_error => {
+            isFetching = false;
+
+            return fail(`Couldn't fetch YouTube video document`);
+          });
+        break;
+      default:
+        break;
+    }
   };
 
   const clearError = () => (errorMessage = null);
@@ -79,13 +117,13 @@
   <Editor {importedProject} {videoDocument} />
 {:else}
   <section>
-    <Form on:submit={loadVideoDocument}>
+    <Form on:submit={loadVideoConfig}>
       <TextInput
-        labelText="Video document URL / ID"
+        labelText="Video URL / ID"
         disabled={isFetching}
         invalid={errorMessage !== null}
         invalidText={errorMessage || undefined}
-        bind:value={videoReference}
+        bind:value={clue}
         on:keydown={clearError}
         on:focus={clearError}
       />

@@ -21,7 +21,7 @@
   let preferencesManagerPopoverPosition: PopoverPosition;
 
   $: articleLines = [
-    `#easeframe${videoDocument.id}${$preferences && preferences.getConfigAsAlternatingCase()}`,
+    `#easeframe${videoDocument._reference}${$preferences && preferences.getConfigAsAlternatingCase()}`,
     ...timesMS.map(timeMS => `#markTIME${timeMS}`),
     `#endeaseframe`
   ];

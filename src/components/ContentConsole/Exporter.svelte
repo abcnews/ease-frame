@@ -15,7 +15,7 @@
 
   $: shareURL = `${String(window.location.href).split('?')[0]}?${new URLSearchParams(
     onlyStringProps({
-      v: videoDocument.id,
+      v: videoDocument._reference,
       t: Object.keys(stillFrames).join('-'),
       b: $preferences.background,
       i: $preferences.inset,
@@ -29,7 +29,7 @@
     const zip = new JSZip();
     const timesMS = sortedNumericAscendingKeys(stillFrames);
     const numDurationMSChars = String(timesMS[timesMS.length - 1]).length;
-    const name = `ease-frame-${videoDocument.id}`;
+    const name = `ease-frame-${videoDocument._reference}`;
 
     // Images
     timesMS.forEach(timeMS => {

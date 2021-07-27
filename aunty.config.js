@@ -2,6 +2,7 @@ require('dotenv-defaults/config');
 
 const fs = require('fs');
 const path = require('path');
+const { ProvidePlugin } = require('webpack');
 
 const DEPLOY_TO = `/www/res/sites/news-projects/<name>/<id>`;
 const PUBLIC_PATH = path.join(__dirname, 'public');
@@ -53,6 +54,26 @@ module.exports = {
       ...(config.resolve.alias || {}),
       svelte: path.resolve('node_modules', 'svelte')
     };
+
+    // Polyfill some node.js APIs via module resolution fallbacks
+    config.resolve.fallback = {
+      ...(config.resolve.fallback || {}),
+      assert: require.resolve('assert/'),
+      http: require.resolve('stream-http'),
+      https: require.resolve('https-browserify'),
+      stream: require.resolve('stream-browserify'),
+      timers: require.resolve('timers-browserify'),
+      util: require.resolve('util/')
+    };
+
+    // Polyfill some node.js APIs via ProvidePlugin
+    config.plugins.push(
+      new ProvidePlugin({
+        Buffer: [require.resolve('buffer/'), 'Buffer'],
+        console: require.resolve('console-browserify'),
+        process: require.resolve('process/browser')
+      })
+    );
 
     // Disable dart-sass warnings
     getLoaderDefinition(config, 'scss', 'sass').options = { sassOptions: { quietDeps: true } };
