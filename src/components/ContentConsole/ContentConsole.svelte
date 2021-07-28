@@ -25,6 +25,10 @@
     ...timesMS.map(timeMS => `#markTIME${timeMS}`),
     `#endeaseframe`
   ];
+  $: initialArticleLineParts = articleLines[0]
+    .replace(/(easeframe)([a-z0-9]+)/g, '$1|$2')
+    .replace(/([A-Z]+)/g, '|$1')
+    .split('|');
   $: shouldStillFramesUpdate(videoFile, timesMS, stillFrames) &&
     getNextStillFrames(videoFile, timesMS, stillFrames).then(nextStillFrames => {
       stillFrames = nextStillFrames;
@@ -44,7 +48,14 @@
 <div use:size={onSize}>
   <ul>
     <li>
-      <pre>{articleLines[0].replace(/([A-Z]+)/g, '\n…$1')}</pre>
+      <pre>
+        {#each initialArticleLineParts as part, index}
+        {#if index !== 0}
+        <wbr />
+        {/if}
+        {part}
+        {/each}
+      </pre>
       <PreferencesManager popoverPosition={preferencesManagerPopoverPosition} />
     </li>
     {#each timesMS as timeMS, index}
@@ -117,6 +128,7 @@
   pre {
     font-size: 1rem;
     line-height: 1.2;
+    white-space: normal;
   }
 
   li :global(figure) {
