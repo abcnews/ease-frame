@@ -3,7 +3,7 @@ import { ImportedProject } from '../constants';
 
 export type BackgroundPreference = string | null;
 export type InsetPreference = 'left' | 'center' | 'right' | null;
-export type OrientationPreference = 'portrait' | 'landscape';
+export type OrientationPreference = 'portrait' | 'landscape' | null;
 
 export type Preferences = {
   background: BackgroundPreference;
@@ -14,7 +14,7 @@ export type Preferences = {
 export const DEFAULTS: Preferences = {
   inset: null,
   background: null,
-  orientation: 'portrait'
+  orientation: null
 };
 
 const createPreferencesStore = () => {

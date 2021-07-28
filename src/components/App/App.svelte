@@ -6,14 +6,14 @@
   import DocumentVideo24 from 'carbon-icons-svelte/lib/DocumentVideo24/DocumentVideo24.svelte';
   import { get } from 'svelte/store';
   import { getInfo } from 'ytdl-core';
-  import {
+  import { VideoLibrary, YOUTUBE_WATCH_URL_PREFIX, YTDL_OPTIONS } from '../../constants';
+  import type {
+    ImportedProject,
     TerminusVideoDocument,
-    VideoLibrary,
-    YouTubeVideoDocument,
-    YOUTUBE_WATCH_URL_PREFIX,
-    YTDL_OPTIONS
+    VideoDocument,
+    VideoLocation,
+    YouTubeVideoDocument
   } from '../../constants';
-  import type { ImportedProject, VideoDocument } from '../../constants';
   import { default as preferences } from '../../stores/preferences';
   import { encodeYouTubeID, getVideoFile, getVideoLocation } from '../../utils';
   import Editor from '../Editor/Editor.svelte';
@@ -39,7 +39,14 @@
   };
 
   const loadVideoConfig = () => {
-    const videoLocation = getVideoLocation(clue);
+    let videoLocation: VideoLocation | null;
+
+    try {
+      videoLocation = getVideoLocation(clue);
+    } catch (error) {
+      console.error(error);
+      videoLocation = null;
+    }
 
     if (!videoLocation) {
       return fail(`Couldn't locate video based on information provided`);
@@ -57,18 +64,15 @@
               return fail(`Core Media document isn't a Video`);
             }
 
+            console.debug('Got Terminus video document', terminusDocument);
+
             const _videoDocument = {
               ...terminusDocument,
               _library: VideoLibrary.TERMINUS,
               _reference: terminusDocument.id
             };
 
-            if (
-              !getVideoFile(
-                _videoDocument,
-                (importedProject && importedProject.orientation) || get(preferences).orientation
-              )
-            ) {
+            if (!getVideoFile(_videoDocument)) {
               return fail(`Video has no associated files`);
             }
 
@@ -88,6 +92,8 @@
         getInfo(`${YOUTUBE_WATCH_URL_PREFIX}${videoLocation.id}`, YTDL_OPTIONS)
           .then(videoInfo => {
             isFetching = false;
+
+            console.debug('Got YouTube video info', videoInfo);
 
             videoDocument = {
               ...(videoInfo as YouTubeVideoDocument),

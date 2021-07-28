@@ -61,7 +61,7 @@ const comparatorSizeDescending = (a: VideoFile, b: VideoFile) => b.width * b.hei
 
 export const getVideoFile = (
   videoDocument: VideoDocument,
-  preferredOrientation: OrientationPreference
+  preferredOrientation?: OrientationPreference
 ): VideoFile | undefined => {
   let files: VideoFile[];
 
@@ -81,9 +81,15 @@ export const getVideoFile = (
       throw new Error('No library');
   }
 
-  const preferredFiles = files.filter(
-    preferredOrientation === 'portrait' ? isFileAsTallAsOrTallerThanWide : isFileWiderThanTall
-  );
+  const preferredFiles = preferredOrientation
+    ? files.filter(
+        preferredOrientation === 'portrait'
+          ? isFileAsTallAsOrTallerThanWide
+          : preferredOrientation === 'landscape'
+          ? isFileWiderThanTall
+          : () => false // unrecognised preference
+      )
+    : [];
 
   return (preferredFiles.length > 0 ? preferredFiles : files).sort(comparatorSizeDescending)[0];
 };

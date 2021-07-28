@@ -69,11 +69,12 @@
         <RadioButtonGroup
           legendText="Preferred stills orientation"
           orientation="vertical"
-          selected={$preferences.orientation}
-          on:change={({ detail }) => preferences.setOrientation(detail)}
+          selected={$preferences.orientation === null ? 'none' : $preferences.orientation}
+          on:change={({ detail }) => preferences.setOrientation(detail === 'none' ? null : detail)}
         >
-          <RadioButton labelText="Landscape" value="landscape" />
+          <RadioButton labelText="None" value="none" />
           <RadioButton labelText="Portrait" value="portrait" />
+          <RadioButton labelText="Landscape" value="landscape" />
         </RadioButtonGroup>
       </li>
     </menu>
