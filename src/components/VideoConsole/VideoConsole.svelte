@@ -93,10 +93,8 @@
       bind:currentTime
       bind:duration
       bind:paused
-      crossorigin="anonymous"
       muted
       playsinline
-      preload="auto"
       src={videoFile.url}
       on:mousedown={handleVideoPointerDown}
       on:touchstart|passive={handleVideoPointerDown}
