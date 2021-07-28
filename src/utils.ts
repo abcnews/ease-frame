@@ -75,7 +75,7 @@ export const getVideoFile = (
           filter: 'videoonly',
           quality: 'highestvideo'
         }) as VideoFile
-      ].map(file => ({ ...file, url: `https://${PROXY_HOSTNAME}/${file.url}` }));
+      ];
       break;
     default:
       throw new Error('No library');
@@ -93,8 +93,7 @@ const stillFramesCanvasContext = stillFramesCanvasEl.getContext('2d');
 const stillFramesVideoEl = Object.entries<string>({
   crossorigin: 'anonymous',
   muted: '',
-  playsinline: '',
-  preload: 'auto'
+  playsinline: ''
 }).reduce<HTMLVideoElement>((el, [attr, value]) => (el.setAttribute(attr, value), el), document.createElement('video'));
 
 export const shouldStillFramesUpdate = (videoFile: VideoFile, timesMS: number[], stillFrames: StillFrames): boolean => {
@@ -120,7 +119,9 @@ export const getNextStillFrames = async (
   if (hasVideoFileChanged) {
     stillFramesCanvasEl.width = width;
     stillFramesCanvasEl.height = height;
-    stillFramesVideoEl.src = videoFile.url;
+    stillFramesVideoEl.src = `${videoFile.url.indexOf('youtube') > -1 ? `https://${PROXY_HOSTNAME}/` : ''}${
+      videoFile.url
+    }`;
     await stillFramesVideoEl.play();
     await oneShotEvent(stillFramesVideoEl, 'canplaythrough');
     stillFramesVideoEl.pause();
