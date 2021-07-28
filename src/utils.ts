@@ -102,9 +102,18 @@ const stillFramesVideoEl = Object.entries<string>({
   playsinline: ''
 }).reduce<HTMLVideoElement>((el, [attr, value]) => (el.setAttribute(attr, value), el), document.createElement('video'));
 
+export const getCrossOriginVideoURL = (url: string): string =>
+  `${url.indexOf('youtube') > -1 ? `https://${PROXY_HOSTNAME}/` : ''}${url}`;
+
+export const areAllTimesMSInStillFrames = (timesMS: number[], stillFrames: StillFrames): boolean =>
+  timesMS.join() === sortedNumericAscendingKeys(stillFrames).join();
+
 export const shouldStillFramesUpdate = (videoFile: VideoFile, timesMS: number[], stillFrames: StillFrames): boolean => {
-  // We should update if our stillFrames keys don't match our timesMS values
-  return stillFramesVideoEl.src !== videoFile.url || sortedNumericAscendingKeys(stillFrames).join() !== timesMS.join();
+  // We should update if we have a new video URL or our stillFrames keys don't match our timesMS values
+  return (
+    stillFramesVideoEl.src !== getCrossOriginVideoURL(videoFile.url) ||
+    !areAllTimesMSInStillFrames(timesMS, stillFrames)
+  );
 };
 
 export const getNextStillFrames = async (
@@ -116,22 +125,22 @@ export const getNextStillFrames = async (
     throw new Error('No canvas context to work with');
   }
 
-  const { width, height, url } = videoFile;
+  const { width, height } = videoFile;
+  const url = getCrossOriginVideoURL(videoFile.url);
   const hasVideoFileChanged = stillFramesVideoEl.src !== url;
-  const nextStillFrames: StillFrames = {
-    ...currentStillFrames
-  };
 
   if (hasVideoFileChanged) {
     stillFramesCanvasEl.width = width;
     stillFramesCanvasEl.height = height;
-    stillFramesVideoEl.src = `${videoFile.url.indexOf('youtube') > -1 ? `https://${PROXY_HOSTNAME}/` : ''}${
-      videoFile.url
-    }`;
+    stillFramesVideoEl.src = url;
     await stillFramesVideoEl.play();
     await oneShotEvent(stillFramesVideoEl, 'canplaythrough');
     stillFramesVideoEl.pause();
   }
+
+  const nextStillFrames: StillFrames = {
+    ...currentStillFrames
+  };
 
   for (let timeMS of timesMS) {
     if (hasVideoFileChanged || !nextStillFrames[timeMS]) {

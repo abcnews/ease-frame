@@ -11,7 +11,7 @@
   import type VideoConsole from '../VideoConsole/VideoConsole.svelte';
   import Exporter from './Exporter.svelte';
 
-  export let timesMS: number[];
+  export let timesMS: number[] = [];
   export let seek: VideoConsole['seek'];
   export let videoFile: VideoFile;
   export let videoDocument: VideoDocument;
@@ -79,7 +79,7 @@
   </ul>
   {#if timesMS.length > 0}
     <footer>
-      <Exporter {videoDocument} {articleLines} {stillFrames} />
+      <Exporter {videoDocument} {articleLines} {timesMS} {stillFrames} />
     </footer>
   {/if}
 </div>
