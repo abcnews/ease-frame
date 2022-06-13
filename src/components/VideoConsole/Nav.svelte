@@ -28,6 +28,14 @@
   const seekToPreviousKeyTimeMS = () => seek(Math.max(...previousKeyTimesMS));
   const seekToNextKeyTimeMS = () => seek(Math.min(...nextKeyTimesMS));
   const seekBy = (diffMS: number) => seek(Math.round((currentTimeMS + diffMS) / 10) * 10);
+  const acceptCurrentTimeMSInputFromPrompt = () => {
+    const timeMSText = prompt('Enter time in MS to seek to', String(currentTimeMS)) || '';
+    const timeMS = parseInt(timeMSText, 10);
+
+    if (!isNaN(timeMS) && timeMS >= 0 && timeMS <= durationMS) {
+      seek(timeMS);
+    }
+  };
 </script>
 
 <nav>
@@ -105,7 +113,7 @@
     {/if}
   </div>
   <div data-group="center">
-    <pre>{`${formatMillisecondsAsSecondsAndMilliseconds(currentTimeMS)} / ${formatMillisecondsAsSecondsAndMilliseconds(durationMS)}`}</pre>
+    <pre><span on:click={acceptCurrentTimeMSInputFromPrompt}>{formatMillisecondsAsSecondsAndMilliseconds(currentTimeMS)}</span> / <span>{formatMillisecondsAsSecondsAndMilliseconds(durationMS)}</span></pre>
   </div>
 </nav>
 

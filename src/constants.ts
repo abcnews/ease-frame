@@ -26,7 +26,7 @@ export interface VideoFile {
 
 export type TerminusVideoDocument = {
   id: string;
-  docType: string;
+  docType: 'video';
   media: {
     video: {
       renditions: {

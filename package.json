@@ -47,6 +47,6 @@
     "svelte-range-slider-pips": "^1.7.2",
     "timers-browserify": "^2.0.12",
     "util": "^0.12.4",
-    "ytdl-core": "^4.9.0"
+    "ytdl-core": "^4.9.1"
   }
 }
