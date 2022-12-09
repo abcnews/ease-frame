@@ -21,15 +21,14 @@
 		"> 1.5%"
 	],
 	"devDependencies": {
-		"@abcnews/aunty": "^12.0.3",
+		"@abcnews/aunty": "^13.2.2",
 		"@testing-library/svelte": "^3.0.3",
 		"@types/file-saver": "^2.0.2",
 		"@types/jest": "^26.0.23",
-		"@types/webpack-env": "^1.16.0",
-		"dotenv-defaults": "^2.0.2"
+		"@types/webpack-env": "^1.16.0"
 	},
 	"dependencies": {
-		"@abcnews/terminus-fetch": "^4.0.1",
+		"@abcnews/terminus-fetch": "^5.0.0",
 		"@abcnews/url2cmid": "^1.1.0",
 		"carbon-components": "^10.40.0",
 		"carbon-components-svelte": "^0.41.0",

@@ -2,15 +2,14 @@
 /node_modules
 
 # output
-/.build
-/.deploy
+/.aunty
 
 # misc
 .DS_Store
 npm-debug.log
 
-# debug environment variables
-/.env
-
 # redirect
 /.redirect
+
+# environment
+/.env
