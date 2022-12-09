@@ -1,6 +1,6 @@
 {
 	"name": "ease-frame",
-	"version": "1.9.0",
+	"version": "1.10.0",
 	"description": "A project generated from aunty's svelte project template.",
 	"license": "MIT",
 	"private": true,
