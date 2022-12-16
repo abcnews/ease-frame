@@ -36,6 +36,7 @@
 		"file-saver": "^2.0.5",
 		"jszip": "^3.6.0",
 		"svelte": "^3.40.0",
+		"svelte-local-storage-store": "^0.3.2",
 		"svelte-range-slider-pips": "^1.7.2"
 	}
 }

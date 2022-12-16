@@ -48,7 +48,7 @@
       <PreferencesManager popoverPosition={preferencesManagerPopoverPosition} />
     </li>
     {#each timesMS as timeMS, index}
-      <li on:click={() => seek(+timeMS)}>
+      <li on:click={() => seek(+timeMS)} on:keydown={() => {}}>
         <pre>{articleLines[index + 1]}</pre>
         <Figure ratio="1x1">
           {#if timeMS in stillFramesObjectURLs}

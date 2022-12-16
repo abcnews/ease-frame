@@ -6,24 +6,14 @@
   import JSZip from 'jszip';
   import { saveAs } from 'file-saver';
   import type { StillFrames, VideoDocument } from '../../constants';
-  import { default as preferences } from '../../stores/preferences';
-  import { onlyStringProps, sortedNumericAscendingKeys } from '../../utils';
+  import { getImportURL } from '../../stores/projects';
+  import { sortedNumericAscendingKeys } from '../../utils';
 
   export let articleLines: string[];
   export let videoDocument: VideoDocument;
   export let stillFrames: StillFrames;
 
-  $: shareURL = `${String(window.location.href).split('?')[0]}?${new URLSearchParams(
-    onlyStringProps({
-      v: videoDocument.id,
-      t: Object.keys(stillFrames).join('-'),
-      b: $preferences.background,
-      i: $preferences.inset,
-      o: $preferences.orientation
-    })
-  ).toString()}`;
-
-  const copyShareURL = () => navigator.clipboard.writeText(shareURL);
+  const copyShareURL = () => navigator.clipboard.writeText(getImportURL(videoDocument.id));
   const copyMarkers = () => navigator.clipboard.writeText(articleLines.join('\n\n'));
   const exportAssets = async () => {
     const zip = new JSZip();

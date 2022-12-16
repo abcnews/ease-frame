@@ -10,6 +10,7 @@
   import { default as preferences } from '../../stores/preferences';
   import { getVideoFile } from '../../utils';
   import Editor from '../Editor/Editor.svelte';
+  import RecentProjects from '../RecentProjects/RecentProjects.svelte';
 
   export let importedProject: ImportedProject | undefined;
 
@@ -89,6 +90,9 @@
         on:keydown={clearError}
         on:focus={clearError}
       />
+      <div class="recent">
+        <RecentProjects />
+      </div>
       <Button type="submit" disabled={isFetching} icon={DocumentVideo24} size="field"
         >{`${importedProject ? 'Import' : 'Create'} project`}</Button
       >
@@ -98,6 +102,7 @@
 
 <style>
   section :global(form) {
+    position: relative;
     margin: 20vh auto 0;
     padding: 0 1rem;
     width: 100%;
@@ -106,6 +111,13 @@
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
+  }
+
+  .recent {
+    position: absolute;
+    top: 1.75rem;
+    right: 1.25rem;
+    text-align: right;
   }
 
   section :global(form) > :global(*) {

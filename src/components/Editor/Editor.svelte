@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { ImportedProject, VideoDocument } from '../../constants';
   import preferences from '../../stores/preferences';
+  import { saveProject } from '../../stores/projects';
   import { getVideoFile } from '../../utils';
   import ContentConsole from '../ContentConsole/ContentConsole.svelte';
   import VideoConsole from '../VideoConsole/VideoConsole.svelte';
@@ -12,6 +13,9 @@
   let timesMS: number[] = (importedProject && importedProject.timesMS) || [];
 
   $: videoFile = getVideoFile(videoDocument, $preferences.orientation);
+
+  // Continually persist changes
+  $: saveProject(videoDocument.id, timesMS, $preferences);
 </script>
 
 {#if videoFile}
