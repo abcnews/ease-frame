@@ -117,6 +117,7 @@
     position: absolute;
     top: 1.75rem;
     right: 1.25rem;
+    width: 2rem;
     text-align: right;
   }
 
